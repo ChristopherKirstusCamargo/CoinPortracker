@@ -5,7 +5,16 @@ on:
     paths:
       - 'index.html'
       - 'styles.css'
-      - 'app.js'\n      - 'app-core.js'\n      - 'app-view.js'\n      - 'app-actions.js'\n      - 'db.js'\n      - 'market.js'\n      - 'providers.js'\n      - 'manifest.webmanifest'\n      - 'sw.js'\n      - 'icon.svg'
+      - 'app.js'
+      - 'app-core.js'
+      - 'app-view.js'
+      - 'app-actions.js'
+      - 'db.js'
+      - 'market.js'
+      - 'providers.js'
+      - 'manifest.webmanifest'
+      - 'sw.js'
+      - 'icon.svg'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
 permissions:
