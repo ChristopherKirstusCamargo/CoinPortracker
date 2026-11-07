@@ -1,0 +1,51 @@
+(function(){
+ const EVM={
+  ETH:{host:'https://eth.blockscout.com',native:'ETH',coin:'coingecko:ethereum',decimals:18,explorer:'https://etherscan.io'},
+  BASE:{host:'https://base.blockscout.com',native:'ETH',coin:'coingecko:ethereum',decimals:18,explorer:'https://basescan.org'},
+  ARB:{host:'https://arbitrum.blockscout.com',native:'ETH',coin:'coingecko:ethereum',decimals:18,explorer:'https://arbiscan.io'},
+  POL:{host:'https://polygon.blockscout.com',native:'POL',coin:'coingecko:polygon-ecosystem-token',decimals:18,explorer:'https://polygonscan.com'}
+ };
+ const fmtRaw=(v,d)=>Number(v||0)/Math.pow(10,d||0),low=s=>String(s||'').toLowerCase();
+ async function get(url,opts={}){const res=await fetch(url,{...opts,signal:AbortSignal.timeout?AbortSignal.timeout(18000):undefined});if(!res.ok)throw Error('HTTP '+res.status+' em '+new URL(url).hostname);return res.json()}
+ async function post(url,body){return get(url,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)})}
+ function row(o){return {id:String(o.id),time:Number(o.time)||0,chain:o.chain,address:o.address,from:o.from||'',to:o.to||'',block:o.block??null,url:o.url,kind:o.kind||'transfer',asset:o.asset||'',amount:o.amount??'',feeAmount:o.feeAmount??null,feeAsset:o.feeAsset||'',status:o.status||'success',source:'explorer'}}
+ async function bitcoin(w,cursor){
+  const u='https://mempool.space/api/address/'+encodeURIComponent(w.address),a=await get(u);
+  const net=a.chain_stats.funded_txo_sum+a.mempool_stats.funded_txo_sum-a.chain_stats.spent_txo_sum-a.mempool_stats.spent_txo_sum;
+  const list=await get(u+'/txs'+(cursor?'/chain/'+encodeURIComponent(cursor):''));
+  const tx=list.map(t=>{const ins=t.vin||[],outs=t.vout||[],mineIn=ins.filter(x=>x.prevout?.scriptpubkey_address===w.address),mineOut=outs.filter(x=>x.scriptpubkey_address===w.address),delta=mineOut.reduce((n,x)=>n+(+x.value||0),0)-mineIn.reduce((n,x)=>n+(+x.prevout?.value||0),0),sent=mineIn.length>0;
+   return row({id:t.txid,time:t.status?.block_time,chain:'BTC',address:w.address,from:ins[0]?.prevout?.scriptpubkey_address,to:outs[0]?.scriptpubkey_address,block:t.status?.block_height,url:'https://mempool.space/tx/'+t.txid,kind:delta>=0?'entrada':'saida',asset:'BTC',amount:fmtRaw(Math.abs(delta),8),feeAmount:sent?fmtRaw(t.fee,8):null,feeAsset:'BTC',status:t.status?.confirmed?'success':'pending'})});
+  return {assets:[{symbol:'BTC',name:'Bitcoin',amount:fmtRaw(net,8),priceKey:'coingecko:bitcoin',chain:'BTC'}],tx,cursor:list.length?list[list.length-1].txid:null,hasMore:list.length===25,oldest:tx.length?Math.min(...tx.map(t=>t.time||Date.now()/1000)):null,coverage:'25 transações por página; páginas antigas via mempool.space.'};
+ }
+ async function evm(w,cursor){
+  const c=EVM[w.network],base=c.host+'/api/v2/addresses/'+encodeURIComponent(w.address);
+  const [addr,tokens,txs]=await Promise.all([get(base),get(base+'/token-balances').catch(()=>[]),get(base+'/transactions'+(cursor?'?'+new URLSearchParams(cursor):'')).catch(()=>({items:[],next_page_params:null}))]);
+  const assets=[{symbol:c.native,name:c.native,amount:fmtRaw(addr.coin_balance,18),priceKey:c.coin,chain:w.network}];
+  (Array.isArray(tokens)?tokens:[]).forEach(x=>{const t=x.token||{},amount=fmtRaw(x.value,t.decimals||0);if(amount)assets.push({symbol:t.symbol||'TOKEN',name:t.name||t.symbol||'Token',amount,priceKey:t.address?w.network.toLowerCase()+':'+t.address:null,chain:w.network,contract:t.address,decimals:t.decimals,estimatedPrice:t.exchange_rate?+t.exchange_rate:null})});
+  const items=txs.items||[],tx=items.map(t=>{const from=t.from?.hash||'',to=t.to?.hash||'',mine=low(from)===low(w.address),fee=t.fee?.value?fmtRaw(t.fee.value,18):t.gas_used&&t.gas_price?Number(BigInt(t.gas_used)*BigInt(t.gas_price))/1e18:null;
+   return row({id:t.hash,time:t.timestamp?Date.parse(t.timestamp)/1000:0,chain:w.network,address:w.address,from,to,block:t.block,url:c.explorer+'/tx/'+t.hash,kind:mine?'saida':low(to)===low(w.address)?'entrada':'contrato',asset:c.native,amount:fmtRaw(t.value,18),feeAmount:mine?fee:null,feeAsset:c.native,status:t.status==='error'?'failed':'success'})});
+  return {assets,tx,cursor:txs.next_page_params||null,hasMore:!!txs.next_page_params,oldest:tx.length?Math.min(...tx.map(t=>t.time)):null,coverage:'Saldo nativo, tokens ERC-20/NFT indexados e histórico paginado via Blockscout.'};
+ }
+ async function solana(w,cursor){
+  const url='https://api.mainnet-beta.solana.com';
+  const [bal,tokenAcc,sigs]=await Promise.all([post(url,{jsonrpc:'2.0',id:1,method:'getBalance',params:[w.address]}),post(url,{jsonrpc:'2.0',id:2,method:'getTokenAccountsByOwner',params:[w.address,{programId:'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'},{encoding:'jsonParsed'}]}).catch(()=>({result:{value:[]}})),post(url,{jsonrpc:'2.0',id:3,method:'getSignaturesForAddress',params:[w.address,{limit:100,...(cursor?{before:cursor}:{})}]})]);
+  if(bal.error)throw Error(bal.error.message);
+  const assets=[{symbol:'SOL',name:'Solana',amount:fmtRaw(bal.result?.value,9),priceKey:'coingecko:solana',chain:'SOL'}];
+  (tokenAcc.result?.value||[]).forEach(t=>{const x=t.account?.data?.parsed?.info,ta=x?.tokenAmount;if(+ta?.uiAmount>0)assets.push({symbol:x.mint.slice(0,6),name:'SPL token',amount:+ta.uiAmount,priceKey:'solana:'+x.mint,chain:'SOL',contract:x.mint})});
+  const sigsList=sigs.result||[],tx=[];
+  for(let i=0;i<Math.min(sigsList.length,24);i++){const s=sigsList[i];let fee=null,from='',to='',amount='',kind='contrato';try{const detail=await post(url,{jsonrpc:'2.0',id:4,method:'getTransaction',params:[s.signature,{encoding:'jsonParsed',maxSupportedTransactionVersion:0}]}),d=detail.result;if(d){fee=fmtRaw(d.meta?.fee,9);const keys=d.transaction?.message?.accountKeys||[];from=keys[0]?.pubkey||keys[0]||'';const ix=(d.transaction?.message?.instructions||[]).find(x=>x.parsed?.type==='transfer');if(ix){from=ix.parsed.info.source;to=ix.parsed.info.destination;amount=ix.parsed.info.lamports?fmtRaw(ix.parsed.info.lamports,9):ix.parsed.info.amount;kind=low(from)===low(w.address)?'saida':'entrada'}}}catch(_){}tx.push(row({id:s.signature,time:s.blockTime,chain:'SOL',address:w.address,from,to,block:s.slot,url:'https://solscan.io/tx/'+s.signature,kind,asset:'SOL',amount,feeAmount:from&&low(from)===low(w.address)?fee:null,feeAsset:'SOL',status:s.err?'failed':'success'}))}
+  return {assets,tx,cursor:sigsList.length?sigsList[sigsList.length-1].signature:null,hasMore:sigsList.length===100,oldest:tx.length?Math.min(...tx.map(t=>t.time)):null,coverage:'Saldo nativo e contas SPL; RPC público tem rate limit e histórico pode ser podado.'};
+ }
+ async function xrp(w,cursor){
+  const endpoint='https://s1.ripple.com:51234/',account=await post(endpoint,{method:'account_info',params:[{account:w.address,ledger_index:'validated'}]}),history=await post(endpoint,{method:'account_tx',params:[{account:w.address,ledger_index_min:-1,ledger_index_max:-1,limit:50,...(cursor?{marker:cursor}:{})}]});
+  const tx=(history.result?.transactions||[]).map(x=>{const t=x.tx||x.tx_json||{},date=t.date?946684800+t.date:0,fee=+t.Fee/1e6||0;return row({id:t.hash,time:date,chain:'XRP',address:w.address,from:t.Account,to:t.Destination,block:x.ledger_index,url:'https://livenet.xrpl.org/transactions/'+t.hash+'/detailed',kind:low(t.Account)===low(w.address)?'saida':'entrada',asset:'XRP',amount:typeof t.Amount==='string'?fmtRaw(t.Amount,6):(+t.Amount?.value||0),feeAmount:low(t.Account)===low(w.address)?fee:null,feeAsset:'XRP',status:x.validated?'success':'pending'})});
+  return {assets:[{symbol:'XRP',name:'XRP',amount:fmtRaw(account.result?.account_data?.Balance,6),priceKey:'coingecko:ripple',chain:'XRP'}],tx,cursor:history.result?.marker||null,hasMore:!!history.result?.marker,oldest:tx.length?Math.min(...tx.map(t=>t.time)):null,coverage:'XRP Ledger JSON-RPC público; histórico account_tx paginado.'};
+ }
+ async function tron(w,cursor){
+  const acct=await post('https://api.trongrid.io/wallet/getaccount',{address:w.address,visible:true}),history=await get('https://api.trongrid.io/v1/accounts/'+encodeURIComponent(w.address)+'/transactions?limit=50&only_confirmed=true'+(cursor?'&fingerprint='+encodeURIComponent(cursor):''));
+  const tx=(history.data||[]).map(x=>{const c=x.raw_data?.contract?.[0]?.parameter?.value||{},info=x.ret?.[0]?.contractRet,from=c.owner_address||'',to=c.to_address||'';return row({id:x.txID,time:x.block_timestamp?x.block_timestamp/1000:0,chain:'TRON',address:w.address,from,to,block:x.blockNumber,url:'https://tronscan.org/#/transaction/'+x.txID,kind:low(from)===low(w.address)?'saida':'entrada',asset:'TRX',amount:fmtRaw(c.amount,6),feeAmount:low(from)===low(w.address)?fmtRaw(x.ret?.[0]?.fee,6):null,feeAsset:'TRX',status:info==='SUCCESS'?'success':'failed'})});
+  return {assets:[{symbol:'TRX',name:'TRON',amount:fmtRaw(acct.balance,6),priceKey:'coingecko:tron',chain:'TRON'}],tx,cursor:history.meta?.fingerprint||null,hasMore:!!history.meta?.fingerprint,oldest:tx.length?Math.min(...tx.map(t=>t.time)):null,coverage:'TRON public gateway; limites e disponibilidade variam, chave pode ser necessária.'};
+ }
+ async function sync(w,cursor=null){let result;if(w.network==='BTC')result=await bitcoin(w,cursor);else if(EVM[w.network])result=await evm(w,cursor);else if(w.network==='SOL')result=await solana(w,cursor);else if(w.network==='XRP')result=await xrp(w,cursor);else if(w.network==='TRON')result=await tron(w,cursor);else throw Error('Rede não suportada.');return {...result,network:w.network,address:w.address,updatedAt:Date.now()}}
+ window.CPTProviders={sync,EVM,request:get};
+})();
