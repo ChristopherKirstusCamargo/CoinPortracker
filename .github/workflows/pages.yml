@@ -14,7 +14,9 @@ on:
       - 'providers.js'
       - 'manifest.webmanifest'
       - 'sw.js'
-      - 'icon.svg'\n      - 'icon-192.png'\n      - 'icon-512.png'
+      - 'icon.svg'
+      - 'icon-192.png'
+      - 'icon-512.png'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
 permissions:
