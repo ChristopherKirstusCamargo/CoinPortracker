@@ -146,11 +146,11 @@
     </section>
 
     <section class="page" id="costs">\n      <section class="panel"><div class="panel-heading"><div><h2>Aportes e retiradas externos</h2><p>Registre apenas movimentos entre o mundo externo e suas carteiras; transferências entre suas próprias carteiras não entram aqui.</p></div></div><form id="flowForm" class="cost-form"><label>Movimento<select id="flowType"><option value="deposit">Aporte / entrada externa</option><option value="withdrawal">Retirada / saída externa</option></select></label><label>Valor em moeda base<input id="flowAmount" type="number" min="0.01" step="0.01" required placeholder="0,00"></label><label>Data do movimento<input id="flowDate" type="datetime-local" required></label><label>Observação<input id="flowNote" maxlength="160" placeholder="Opcional"></label><button class="button button-primary">Registrar movimento</button></form><div id="flowList" class="empty-state">Nenhum aporte ou retirada registrado.</div></section>
-      <div class="page-intro"><div><h2>Custos e taxas</h2><p>Informe o total que você sabe; não é necessário reconstruir cada compra.</p></div></div>
+      <div class="page-intro"><div><h2>Custos e taxas</h2><p>Informe o total que você sabe; não é necessário reconstruir cada compra. Use a opção abaixo para dizer se esse total já contém as taxas.</p></div></div>
       <section class="panel cost-panel">
         <div class="panel-heading"><div><h2>Custo agregado de aquisição</h2><p>Uma base global para o conjunto de carteiras selecionado.</p></div><span class="info-tag">Entrada manual</span></div>
         <form id="costForm" class="cost-form">
-          <label>Custo de aquisição total, sem taxas<input id="aggregateCost" type="number" min="0" step="0.01" placeholder="Ex.: 12500,00"></label>
+          <label>Custo total de aquisição (valor informado)<input id="aggregateCost" type="number" min="0" step="0.01" placeholder="Ex.: 12500,00"></label>
           <label>Taxas acumuladas em moeda base<input id="aggregateFees" type="number" min="0" step="0.01" placeholder="Opcional"></label>
           <label>Data aproximada de início<input id="costStartDate" type="date"></label>
           <label>Moeda dos valores<select id="costCurrency"><option value="BRL">BRL — Real</option><option value="USD">USD — Dólar</option></select></label>
