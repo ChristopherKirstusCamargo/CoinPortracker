@@ -35,6 +35,17 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Validate application files
+        run: |
+          node --check db.js
+          node --check market.js
+          node --check providers.js
+          node --check app-core.js
+          node --check app-view.js
+          node --check app-actions.js
+          node --check app.js
+          node --check sw.js
+          node -e "JSON.parse(require('fs').readFileSync('manifest.webmanifest', 'utf8'))"
       - name: Configure Pages
         uses: actions/configure-pages@v5
         with:
