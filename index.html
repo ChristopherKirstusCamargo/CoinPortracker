@@ -1,1 +1,202 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#090b12"><title>CoinPortracker</title><link rel="stylesheet" href="styles.css"></head><body><div class="app"><aside><div class="brand"><b>C</b> CoinPortracker</div><nav><button class="active" data-tab="overview">Visão geral</button><button data-tab="wallets">Carteiras</button><button data-tab="transactions">Transações</button><button data-tab="defi">DeFi</button><button data-tab="fees">Custos e taxas</button><button data-tab="settings">Configurações</button></nav><p class="privacy">● PRIVACIDADE LOCAL<br><span>Sem conta, sem backend próprio e sem chaves privadas. Consultas diretas a APIs públicas.</span></p></aside><main><header><div><small>SEU PATRIMÔNIO, SOB SEU CONTROLE</small><h1 id="title">Visão geral</h1></div><div><button id="backup">Backup JSON</button> <button class="primary" data-open="wallets">＋ Carteira</button></div></header><section id="overview" class="tab active"><div class="notice">P/L confiável exige custo de aquisição conhecido. Uma transferência recebida não é necessariamente uma compra. O histórico de performance começa após a primeira sincronização neste navegador.</div><div class="stats"><article><small>Patrimônio monitorado</small><strong id="total">R$ 0,00</strong><small id="walletCount">0 carteiras</small></article><article><small>P/L total</small><strong id="pl">—</strong><small>Com custo informado</small></article><article><small>Variação 24h</small><strong id="day">—</strong><small>Snapshots locais</small></article><article><small>Cobertura</small><strong id="health">—</strong><small>Redes monitoradas</small></article></div><div class="panel"><div class="panelhead"><b>Performance do patrimônio</b><div id="ranges"><button data-range="3600000">1H</button><button class="chosen" data-range="86400000">24H</button><button data-range="604800000">7D</button><button data-range="31536000000">1A</button><button data-range="all">TOTAL</button></div></div><canvas id="chart"></canvas><small id="chartNote">Sincronize carteiras para iniciar o histórico.</small></div><div class="panel"><b>Ativos monitorados</b><div id="assetList" class="muted">Nenhuma carteira cadastrada.</div></div></section><section id="wallets" class="tab"><div class="panel"><b>Adicionar endereço público</b><form id="walletForm"><select id="network"><option value="BTC">Bitcoin</option><option value="SOL">Solana</option><option value="ETH">Ethereum</option><option value="BASE">Base</option><option value="ARB">Arbitrum</option><option value="POL">Polygon</option></select><input id="address" placeholder="Endereço público" required minlength="20"><input id="basis" type="number" min="0" step=".01" placeholder="Custo de aquisição em R$ (opcional)"><button class="primary">Adicionar</button></form><small>Não informe seed phrase nem chave privada.</small></div><div class="panel panelhead"><b>Endereços cadastrados</b><button class="primary" id="sync">⟳ Sincronizar</button><div id="walletList" class="muted">Nenhuma carteira.</div></div></section><section id="transactions" class="tab"><div class="panel"><div class="panelhead"><b>Transações públicas indexadas</b><input id="search" placeholder="Buscar data, endereço, valor ou rede"></div><div class="scroll"><table><thead><tr><th>Data e hora</th><th>Rede</th><th>Tipo</th><th>Identificador</th><th>Link</th></tr></thead><tbody id="txList"><tr><td colspan="5">Nenhuma transação consultada.</td></tr></tbody></table></div><small>Histórico limitado ao que os indexadores públicos fornecem.</small></div></section><section id="defi" class="tab"><div class="notice">A indexação automática de protocolos DeFi ainda não está implementada. Cadastre posições e recompensas manualmente nesta versão.</div><div class="panel"><b>Registrar posição / recompensa</b><form id="defiForm"><input id="dName" placeholder="Protocolo / ativo" required><input id="dValue" type="number" min="0" step=".01" placeholder="Valor atual em R$"><input id="dReward" placeholder="Recompensa"><input id="dBlock" placeholder="Bloco / slot"><input id="dTime" type="datetime-local"><button class="primary">Salvar registro</button></form><div id="defiList" class="muted">Nenhum registro.</div></div></section><section id="fees" class="tab"><div class="stats"><article><small>Custo de aquisição informado</small><strong id="basisTotal">R$ 0,00</strong></article><article><small>Taxas de rede</small><strong id="feeTotal">Não apuradas</strong></article><article><small>Custo sem taxas</small><strong id="basisNet">R$ 0,00</strong></article></div><div class="panel"><b>Auditoria de taxas</b><p class="muted">A taxa só será exibida quando houver dados de transação e preço histórico suficientes. Taxas de exchange não são inferidas a partir de taxas de rede.</p></div></section><section id="settings" class="tab"><div class="panel"><b>Preferências</b><label><input type="checkbox" id="includeDefi"> Incluir posições DeFi no patrimônio total</label><label>Moeda <select id="currency"><option value="BRL">BRL — Real</option><option value="USD">USD — Dólar</option></select></label><button id="export">Exportar backup</button><label class="file">Importar backup <input type="file" id="import" accept="application/json"></label><button id="clear">Apagar dados locais</button><p class="muted">Dados armazenados neste navegador. Limpar os dados do site pode removê-los. As APIs públicas recebem os endereços consultados e metadados normais da conexão. Sem telemetria própria ou backend.</p></div><div class="panel"><b>Limites da versão</b><p class="muted">Suporte inicial a saldo nativo Bitcoin, Solana e EVM selecionadas. Tokens, NFTs e posições DeFi exigem indexadores específicos. O P/L por período ainda não ajusta entradas, saídas e transferências. O custo de aquisição é informado pelo usuário.</p></div></section></main></div><script src="app.js"></script></body></html>
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#101114">
+  <meta name="description" content="CoinPortracker — acompanhe seu patrimônio cripto com privacidade e armazenamento local.">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="CoinPortracker">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="./icon.svg">
+  <link rel="stylesheet" href="./styles.css">
+  <title>CoinPortracker</title>
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <a class="brand" href="./" aria-label="CoinPortracker início"><span class="brand-mark">C</span><span>CoinPortracker</span></a>
+    <nav class="nav" aria-label="Navegação principal">
+      <button class="nav-item active" data-page="overview"><span>◫</span> Visão geral</button>
+      <button class="nav-item" data-page="wallets"><span>▣</span> Carteiras</button>
+      <button class="nav-item" data-page="transactions"><span>⇄</span> Transações</button>
+      <button class="nav-item" data-page="defi"><span>◈</span> DeFi</button>
+      <button class="nav-item" data-page="costs"><span>⌁</span> Custos e taxas</button>
+      <button class="nav-item" data-page="settings"><span>⚙</span> Configurações</button>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="privacy-mark"><span class="dot"></span><span>LOCAL-FIRST</span></div>
+      <p>Seus dados ficam neste navegador. Nenhuma chave privada é solicitada.</p>
+      <button class="quiet-button backup-quick" id="sidebarBackup">↓ Fazer backup</button>
+    </div>
+  </aside>
+  <main class="main">
+    <header class="topbar">
+      <div class="topbar-title"><span class="eyebrow">SEU PATRIMÔNIO, SOB SEU CONTROLE</span><h1 id="pageTitle">Visão geral</h1></div>
+      <div class="topbar-actions">
+        <span id="syncStatus" class="sync-status">Não sincronizado</span>
+        <button class="button button-quiet" id="topBackup">Backup</button>
+        <button class="button button-primary" id="installButton" hidden>Instalar app</button>
+        <button class="button button-primary" data-go="wallets">＋ Carteira</button>
+      </div>
+    </header>
+
+    <section class="page active" id="overview">
+      <div class="notice notice-subtle" id="dataNotice">Os dados são consultados diretamente em provedores públicos. A cobertura depende da rede e do indexador; indicadores históricos só aparecem quando existem snapshots suficientes.</div>
+      <div class="metric-grid">
+        <article class="metric-card metric-main"><span class="metric-label">Patrimônio monitorado</span><strong id="totalValue">—</strong><span class="metric-foot" id="totalFoot">Adicione uma carteira para começar</span></article>
+        <article class="metric-card"><span class="metric-label">P/L total estimado</span><strong id="totalPnl">—</strong><span class="metric-foot">Com base no custo agregado informado</span></article>
+        <article class="metric-card"><span class="metric-label">Variação em 24 horas</span><strong id="pnl24">—</strong><span class="metric-foot">Snapshots locais, ajustados por fluxos registrados</span></article>
+        <article class="metric-card"><span class="metric-label">Cobertura de preços</span><strong id="priceCoverage">—</strong><span class="metric-foot" id="coverageFoot">Ativos com preço identificado</span></article>
+      </div>
+      <div class="content-grid content-grid-main">
+        <section class="panel performance-panel">
+          <div class="panel-heading"><div><h2>Performance</h2><p>Variação do patrimônio ao longo do tempo</p></div>
+            <div class="segmented" id="chartRanges">
+              <button data-range="3600000">1H</button><button class="selected" data-range="86400000">24H</button><button data-range="604800000">7D</button><button data-range="2592000000">1M</button><button data-range="31536000000">1A</button><button data-range="all">TUDO</button>
+            </div>
+          </div>
+          <div class="chart-wrap"><canvas id="performanceChart" aria-label="Gráfico de performance do patrimônio"></canvas><div class="chart-empty" id="chartEmpty">Seu histórico começa na primeira sincronização.</div></div>
+          <div class="chart-foot"><span id="chartRangeNote">Sem snapshots suficientes para este período.</span><span id="firstSeen">Primeira atividade: —</span></div>
+        </section>
+        <section class="panel health-panel">
+          <div class="panel-heading"><div><h2>Saúde do portfólio</h2><p>Indicadores de estrutura e cobertura</p></div><span class="info-tag">Informativo</span></div>
+          <div class="health-score"><strong id="healthScore">—</strong><span id="healthLabel">Aguardando dados</span></div>
+          <div class="health-rows">
+            <div><span>Diversificação</span><strong id="diversification">—</strong></div>
+            <div><span>Concentração no maior ativo</span><strong id="concentration">—</strong></div>
+            <div><span>Redes monitoradas</span><strong id="networkCount">0</strong></div>
+            <div><span>Ativos sem preço</span><strong id="unpricedCount">0</strong></div>
+          </div>
+          <p class="micro-note">O indicador mede distribuição e qualidade dos dados; não é recomendação de investimento.</p>
+        </section>
+      </div>
+      <section class="panel pnl-period-panel">
+        <div class="panel-heading"><div><h2>P/L por período</h2><p>Estimativa baseada em snapshots e fluxos externos cadastrados</p></div><span class="info-tag">BRL / moeda escolhida</span></div>
+        <div class="period-grid">
+          <div><span>1 hora</span><strong id="period1h">—</strong></div>
+          <div><span>24 horas</span><strong id="period24h">—</strong></div>
+          <div><span>7 dias</span><strong id="period7d">—</strong></div>
+          <div><span>1 ano</span><strong id="period1y">—</strong></div>
+          <div><span>Desde o início registrado</span><strong id="periodAll">—</strong></div>
+        </div>
+      </section>
+      <section class="panel">
+        <div class="panel-heading"><div><h2>Ativos</h2><p>Saldo atual consolidado por ativo</p></div><button class="text-button" data-go="wallets">Gerenciar carteiras →</button></div>
+        <div id="holdingsList" class="empty-state">Nenhum ativo carregado.</div>
+      </section>
+    </section>
+
+    <section class="page" id="wallets">
+      <div class="page-intro"><div><h2>Carteiras públicas</h2><p>Adicione somente endereços públicos. Não use seed phrase ou chave privada.</p></div><button class="button button-quiet" id="syncAll">↻ Sincronizar todas</button></div>
+      <section class="panel">
+        <form id="walletForm" class="wallet-form">
+          <label>Rede<select id="walletNetwork" required>
+            <option value="BTC">Bitcoin</option><option value="ETH">Ethereum</option><option value="BASE">Base</option><option value="ARB">Arbitrum One</option><option value="POL">Polygon</option><option value="SOL">Solana</option><option value="XRP">XRP Ledger</option><option value="TRON">TRON</option>
+          </select></label>
+          <label>Nome (opcional)<input id="walletLabel" maxlength="40" placeholder="Ex.: Carteira principal"></label>
+          <label>Endereço público<input id="walletAddress" autocomplete="off" spellcheck="false" placeholder="Cole o endereço público" required></label>
+          <button class="button button-primary add-wallet-button">Adicionar carteira</button>
+        </form>
+        <p class="micro-note">As redes disponíveis possuem leitura de saldo nativo. Tokens adicionais são detectados onde o indexador fornece os dados. A cobertura varia por rede.</p>
+      </section>
+      <section class="panel">
+        <div class="panel-heading"><div><h2>Endereços adicionados</h2><p id="walletSummary">0 carteiras</p></div><span id="walletSyncInfo" class="muted">—</span></div>
+        <div id="walletList" class="empty-state">Nenhuma carteira adicionada.</div>
+      </section>
+    </section>
+
+    <section class="page" id="transactions">
+      <div class="page-intro"><div><h2>Transações</h2><p>Histórico público indexado das carteiras cadastradas.</p></div><span id="transactionCount" class="info-tag">0 registros</span></div>
+      <section class="panel">
+        <div class="filter-grid">
+          <label class="search-field">Pesquisar<input id="transactionSearch" type="search" placeholder="Data, hash, endereço, ativo ou valor"></label>
+          <label>Rede<select id="filterNetwork"><option value="">Todas as redes</option><option>BTC</option><option>ETH</option><option>BASE</option><option>ARB</option><option>POL</option><option>SOL</option><option>XRP</option><option>TRON</option></select></label>
+          <label>Tipo<select id="filterType"><option value="">Todos os tipos</option><option value="entrada">Entrada</option><option value="saida">Saída</option><option value="contrato">Contrato</option><option value="reward">Recompensa</option></select></label>
+          <label>De<input id="filterFrom" type="date"></label>
+          <label>Até<input id="filterTo" type="date"></label>
+        </div>
+        <div class="table-scroll"><table><thead><tr><th>Data / hora</th><th>Rede</th><th>Tipo</th><th>Ativo / quantidade</th><th>Taxa de rede</th><th>Transação</th></tr></thead><tbody id="transactionRows"><tr><td colspan="6">Nenhuma transação carregada.</td></tr></tbody></table></div>
+        <div class="table-bottom"><span id="transactionCoverage" class="micro-note">A data mais antiga encontrada não prova a gênese da carteira.</span><button class="button button-quiet" id="loadOlder">Carregar transações antigas</button></div>
+      </section>
+    </section>
+
+    <section class="page" id="defi">
+      <div class="page-intro"><div><h2>DeFi</h2><p>Posições, recompensas e passivos que podem integrar o patrimônio.</p></div><label class="switch-inline"><input id="includeDefi" type="checkbox"><span>Somar no patrimônio</span></label></div>
+      <div class="notice notice-subtle">O rastreamento automático de qualquer protocolo DeFi não é universal. Esta versão permite cadastrar e acompanhar posições manualmente; dados automáticos só serão apresentados quando um adaptador puder identificar o evento on-chain com evidência.</div>
+      <section class="panel">
+        <div class="panel-heading"><div><h2>Adicionar posição ou recompensa</h2><p>Registre valor atual e metadados do evento quando disponíveis.</p></div></div>
+        <form id="defiForm" class="defi-form">
+          <label>Tipo<select id="defiType"><option value="position">Posição</option><option value="reward">Recompensa</option><option value="liability">Dívida / passivo</option></select></label>
+          <label>Protocolo / ativo<input id="defiName" required placeholder="Ex.: Lido, Aave, SOL staking"></label>
+          <label>Rede<select id="defiNetwork"><option>Ethereum</option><option>Solana</option><option>Base</option><option>Arbitrum</option><option>Polygon</option><option>Outra</option></select></label>
+          <label>Valor atual em moeda base<input id="defiValue" type="number" min="0" step="0.00000001" placeholder="0,00"></label>
+          <label>Token / unidade<input id="defiAsset" placeholder="Ex.: stETH, SOL, USDC"></label>
+          <label>Recompensa (quantidade)<input id="defiReward" placeholder="Opcional"></label>
+          <label>Bloco / slot<input id="defiBlock" placeholder="Opcional"></label>
+          <label>Data e hora do evento<input id="defiTime" type="datetime-local"></label>
+          <label class="wide-field">Hash da transação / observação<input id="defiEvidence" placeholder="Link ou hash para auditoria"></label>
+          <label class="check-field"><input id="defiAlreadyCounted" type="checkbox"><span>O valor já está incluído no saldo de uma carteira (evitar dupla contagem)</span></label>
+          <button class="button button-primary">Salvar registro</button>
+        </form>
+      </section>
+      <section class="panel"><div class="panel-heading"><div><h2>Posições registradas</h2><p id="defiSummary">0 registros</p></div></div><div id="defiList" class="empty-state">Nenhuma posição ou recompensa.</div></section>
+    </section>
+
+    <section class="page" id="costs">
+      <div class="page-intro"><div><h2>Custos e taxas</h2><p>Informe o total que você sabe; não é necessário reconstruir cada compra.</p></div></div>
+      <section class="panel cost-panel">
+        <div class="panel-heading"><div><h2>Custo agregado de aquisição</h2><p>Uma base global para o conjunto de carteiras selecionado.</p></div><span class="info-tag">Entrada manual</span></div>
+        <form id="costForm" class="cost-form">
+          <label>Custo de aquisição total, sem taxas<input id="aggregateCost" type="number" min="0" step="0.01" placeholder="Ex.: 12500,00"></label>
+          <label>Taxas acumuladas em moeda base<input id="aggregateFees" type="number" min="0" step="0.01" placeholder="Opcional"></label>
+          <label>Data aproximada de início<input id="costStartDate" type="date"></label>
+          <label>Moeda dos valores<select id="costCurrency"><option value="BRL">BRL — Real</option><option value="USD">USD — Dólar</option></select></label>
+          <label class="check-field"><input id="costIncludesFees" type="checkbox"><span>O custo de aquisição que informei já inclui as taxas de rede</span></label>
+          <label class="wide-field">Observações<input id="costNotes" maxlength="500" placeholder="Ex.: total aproximado das compras nas corretoras"></label>
+          <button class="button button-primary">Salvar base de custo</button>
+        </form>
+        <div class="allocation-explainer"><strong>Como o CoinPortracker trata esse valor</strong><p>O sistema calcula o P/L agregado como patrimônio atual menos o custo informado. Para exibir custo estimado por ativo, distribui o total proporcionalmente ao valor de mercado atual. Essa alocação é sintética: não representa o preço histórico de compra de cada moeda e não deve ser usada como relatório fiscal.</p></div>
+      </section>
+      <div class="metric-grid cost-metrics">
+        <article class="metric-card"><span class="metric-label">Custo sem taxas</span><strong id="costExFees">—</strong></article>
+        <article class="metric-card"><span class="metric-label">Taxas declaradas</span><strong id="feesDeclared">—</strong></article>
+        <article class="metric-card"><span class="metric-label">Custo total com taxas</span><strong id="costWithFees">—</strong></article>
+        <article class="metric-card"><span class="metric-label">Taxas on-chain detectadas</span><strong id="feesDetected">—</strong><span class="metric-foot">Em unidades nativas e cotação atual quando disponível</span></article>
+      </div>
+      <section class="panel"><div class="panel-heading"><div><h2>Taxas por rede</h2><p>Taxas de transação encontradas nas páginas consultadas.</p></div></div><div id="feeRows" class="empty-state">Nenhuma taxa indexada.</div><p class="micro-note">Taxas de rede, taxas de protocolo/bridge e taxas de corretora são categorias diferentes. O total automático pode estar incompleto enquanto o histórico da carteira não for totalmente indexado.</p></section>
+    </section>
+
+    <section class="page" id="settings">
+      <div class="settings-grid">
+        <section class="panel"><div class="panel-heading"><div><h2>Backup e restauração</h2><p>Leve seus dados para outro navegador ou aparelho.</p></div><span class="info-tag">Local</span></div>
+          <div class="backup-actions"><button class="button button-primary" id="exportBackup">↓ Baixar backup JSON</button><label class="button button-quiet file-button">↑ Restaurar backup<input id="importBackup" type="file" accept="application/json,.json"></label></div>
+          <div class="backup-auto"><div><strong>Backup automático em arquivo</strong><p>Em navegadores compatíveis, escolha um arquivo local para receber atualizações automáticas.</p></div><button class="button button-quiet" id="connectBackupFile">Vincular arquivo</button></div>
+          <p class="micro-note" id="backupStatus">O backup baixa um arquivo versionado com checksum SHA-256. Mantenha uma cópia fora do aparelho.</p>
+        </section>
+        <section class="panel"><div class="panel-heading"><div><h2>Preferências</h2><p>Personalize exibição e armazenamento.</p></div></div>
+          <label class="setting-row">Moeda de exibição<select id="displayCurrency"><option value="BRL">BRL — Real brasileiro</option><option value="USD">USD — Dólar americano</option></select></label>
+          <label class="setting-row">Fonte de preço<select id="priceSource"><option value="llama">DefiLlama (sem chave)</option><option value="coingecko">CoinGecko Demo (chave própria)</option></select></label>
+          <label class="setting-row" id="coingeckoKeyRow">Chave Demo CoinGecko<input id="coingeckoKey" type="password" autocomplete="off" placeholder="Opcional; fica apenas neste navegador"></label>
+          <button class="button button-quiet" id="requestPersistence">Solicitar armazenamento persistente</button><span id="persistenceStatus" class="micro-note"></span>
+        </section>
+        <section class="panel install-panel"><div class="panel-heading"><div><h2>Usar como aplicativo</h2><p>Instale o CoinPortracker na tela inicial do celular.</p></div></div>
+          <div class="install-instructions"><p><strong>Android:</strong> use “Instalar app” no navegador ou menu ⋮ → Instalar aplicativo.</p><p><strong>iPhone:</strong> abra no Safari, toque em Compartilhar e escolha “Adicionar à Tela de Início”.</p></div>
+          <button class="button button-primary" id="installButtonSettings" hidden>Instalar agora</button>
+          <span id="pwaStatus" class="micro-note">O app pode abrir offline para consultar os dados já armazenados. A sincronização precisa de internet.</span>
+        </section>
+        <section class="panel"><div class="panel-heading"><div><h2>Privacidade e dados</h2></div></div>
+          <p class="micro-note">Carteiras, custos, transações e snapshots ficam no armazenamento local. Ao consultar uma blockchain, o provedor recebe o endereço solicitado e seu IP; portanto, não existe anonimato absoluto. O CoinPortracker não possui servidor próprio, conta, analytics ou publicidade.</p>
+          <button class="button button-danger" id="clearData">Apagar todos os dados locais</button>
+        </section>
+      </div>
+    </section>
+    <footer class="footer"><span>CoinPortracker · Somente leitura · Sem custódia</span><span id="appVersion">v2.0 · Local-first</span></footer>
+  </main>
+</div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<script src="./app.js"></script>
+</body>
+</html>
