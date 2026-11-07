@@ -19,7 +19,7 @@
  }
  async function evm(w,cursor){
   const c=EVM[w.network],base=c.host+'/api/v2/addresses/'+encodeURIComponent(w.address);
-  const [addr,tokens,txs,transfers]=await Promise.all([get(base),get(base+'/token-balances').catch(()=>[]),get(base+'/transactions'+(cursor?.tx?'?'+new URLSearchParams(cursor.tx):cursor?'?'+new URLSearchParams(cursor):'')).catch(()=>({items:[],next_page_params:null})),get(base+'/token-transfers'+(cursor?.transfers?'?'+new URLSearchParams(cursor.transfers):'')).catch(()=>({items:[],next_page_params:null}))]);
+  const [addr,tokens,txs,transfers]=await Promise.all([get(base),get(base+'/token-balances').catch(()=>[]),get(base+'/transactions'+(cursor?.tx?'?'+new URLSearchParams(cursor.tx):cursor&&!('transfers'in cursor)?'?'+new URLSearchParams(cursor):'')).catch(()=>({items:[],next_page_params:null})),get(base+'/token-transfers'+(cursor?.transfers?'?'+new URLSearchParams(cursor.transfers):'')).catch(()=>({items:[],next_page_params:null}))]);
   const assets=[{symbol:c.native,name:c.native,amount:fmtRaw(addr.coin_balance,18),priceKey:c.coin,chain:w.network}];
   (Array.isArray(tokens)?tokens:[]).forEach(x=>{const t=x.token||{},amount=fmtRaw(x.value,t.decimals||0);if(amount)assets.push({symbol:t.symbol||'TOKEN',name:t.name||t.symbol||'Token',amount,priceKey:t.address?w.network.toLowerCase()+':'+t.address:null,chain:w.network,contract:t.address,decimals:t.decimals,estimatedPrice:t.exchange_rate?+t.exchange_rate:null})});
   const items=txs.items||[],tx=items.map(t=>{const from=t.from?.hash||'',to=t.to?.hash||'',mine=low(from)===low(w.address),fee=t.fee?.value?fmtRaw(t.fee.value,18):t.gas_used&&t.gas_price?Number(BigInt(t.gas_used)*BigInt(t.gas_price))/1e18:null;
