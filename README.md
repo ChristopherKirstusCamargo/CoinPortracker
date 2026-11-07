@@ -42,9 +42,13 @@ Os endereços, preferências e snapshots ficam no armazenamento local do navegad
 - O preço histórico de compra e o custo exato não podem ser deduzidos de maneira universal apenas de uma chave pública. Informe o custo real ou importe seus registros contábeis.
 - Taxas de rede ainda não são convertidas historicamente para BRL/USD; por isso não exibimos um total fictício.
 
-## Publicação
+## Publicação no GitHub Pages
 
-O workflow `.github/workflows/pages.yml` publica automaticamente `index.html`, `styles.css` e `app.js` na branch `main` pelo GitHub Pages a cada alteração nesses arquivos.
+1. Abra [Settings → Pages](https://github.com/ChristopherKirstusCamargo/CoinPortracker/settings/pages).
+2. Em **Build and deployment → Source**, selecione **GitHub Actions** e salve.
+3. Abra [Actions](https://github.com/ChristopherKirstusCamargo/CoinPortracker/actions), selecione **Deploy CoinPortracker to GitHub Pages** e use **Run workflow** (ou reexecute o primeiro deploy).
+
+O workflow `.github/workflows/pages.yml` publica `index.html`, `styles.css` e `app.js` na branch `main`. O primeiro provisionamento não pode ser concluído pelo token de integração atual, então a seleção inicial em Settings → Pages precisa ser feita pelo proprietário do repositório.
 
 ## Licença
 
