@@ -14,7 +14,7 @@ on:
       - 'providers.js'
       - 'manifest.webmanifest'
       - 'sw.js'
-      - 'icon.svg'
+      - 'icon.svg'\n      - 'icon-192.png'\n      - 'icon-512.png'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
 permissions:
@@ -40,7 +40,7 @@ jobs:
       - name: Prepare static site
         run: |
           mkdir -p dist
-          cp index.html styles.css db.js market.js providers.js app-core.js app-view.js app-actions.js app.js manifest.webmanifest sw.js icon.svg dist/
+          cp index.html styles.css db.js market.js providers.js app-core.js app-view.js app-actions.js app.js manifest.webmanifest sw.js icon.svg icon-192.png icon-512.png dist/
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
