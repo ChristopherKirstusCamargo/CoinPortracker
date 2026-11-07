@@ -19,12 +19,14 @@
  }
  async function evm(w,cursor){
   const c=EVM[w.network],base=c.host+'/api/v2/addresses/'+encodeURIComponent(w.address);
-  const [addr,tokens,txs]=await Promise.all([get(base),get(base+'/token-balances').catch(()=>[]),get(base+'/transactions'+(cursor?'?'+new URLSearchParams(cursor):'')).catch(()=>({items:[],next_page_params:null}))]);
+  const [addr,tokens,txs,transfers]=await Promise.all([get(base),get(base+'/token-balances').catch(()=>[]),get(base+'/transactions'+(cursor?.tx?'?'+new URLSearchParams(cursor.tx):cursor?'?'+new URLSearchParams(cursor):'')).catch(()=>({items:[],next_page_params:null})),get(base+'/token-transfers'+(cursor?.transfers?'?'+new URLSearchParams(cursor.transfers):'')).catch(()=>({items:[],next_page_params:null}))]);
   const assets=[{symbol:c.native,name:c.native,amount:fmtRaw(addr.coin_balance,18),priceKey:c.coin,chain:w.network}];
   (Array.isArray(tokens)?tokens:[]).forEach(x=>{const t=x.token||{},amount=fmtRaw(x.value,t.decimals||0);if(amount)assets.push({symbol:t.symbol||'TOKEN',name:t.name||t.symbol||'Token',amount,priceKey:t.address?w.network.toLowerCase()+':'+t.address:null,chain:w.network,contract:t.address,decimals:t.decimals,estimatedPrice:t.exchange_rate?+t.exchange_rate:null})});
   const items=txs.items||[],tx=items.map(t=>{const from=t.from?.hash||'',to=t.to?.hash||'',mine=low(from)===low(w.address),fee=t.fee?.value?fmtRaw(t.fee.value,18):t.gas_used&&t.gas_price?Number(BigInt(t.gas_used)*BigInt(t.gas_price))/1e18:null;
    return row({id:t.hash,time:t.timestamp?Date.parse(t.timestamp)/1000:0,chain:w.network,address:w.address,from,to,block:t.block,url:c.explorer+'/tx/'+t.hash,kind:mine?'saida':low(to)===low(w.address)?'entrada':'contrato',asset:c.native,amount:fmtRaw(t.value,18),feeAmount:mine?fee:null,feeAsset:c.native,status:t.status==='error'?'failed':'success'})});
-  return {assets,tx,cursor:txs.next_page_params||null,hasMore:!!txs.next_page_params,oldest:tx.length?Math.min(...tx.map(t=>t.time)):null,coverage:'Saldo nativo, tokens ERC-20/NFT indexados e histórico paginado via Blockscout.'};
+  const tokenTx=(transfers.items||[]).map(t=>{const from=t.from?.hash||'',to=t.to?.hash||'',token=t.token||{},dec=+token.decimals||0,value=fmtRaw(t.total?.value??t.total_value,dec);return row({id:t.transaction_hash||t.tx_hash,time:t.timestamp?Date.parse(t.timestamp)/1000:0,chain:w.network,address:w.address,from,to,block:t.block_number,url:c.explorer+'/tx/'+(t.transaction_hash||t.tx_hash),kind:low(from)===low(w.address)?'saida':'entrada',asset:token.symbol||'TOKEN',amount:value,feeAmount:null,feeAsset:c.native,status:'success'})});
+  const next=txs.next_page_params||transfers.next_page_params?{tx:txs.next_page_params||null,transfers:transfers.next_page_params||null}:null;
+  return {assets,tx:tx.concat(tokenTx),cursor:next,hasMore:!!next,oldest:tx.concat(tokenTx).length?Math.min(...tx.concat(tokenTx).map(t=>t.time).filter(Boolean)):null,coverage:'Saldo nativo, tokens e transferências indexados pelo Blockscout; histórico paginado.'};
  }
  async function solana(w,cursor){
   const url='https://api.mainnet-beta.solana.com';
