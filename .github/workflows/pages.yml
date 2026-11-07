@@ -5,7 +5,7 @@ on:
     paths:
       - 'index.html'
       - 'styles.css'
-      - 'app.js'
+      - 'app.js'\n      - 'app-core.js'\n      - 'app-view.js'\n      - 'app-actions.js'\n      - 'db.js'\n      - 'market.js'\n      - 'providers.js'\n      - 'manifest.webmanifest'\n      - 'sw.js'\n      - 'icon.svg'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
 permissions:
@@ -31,7 +31,7 @@ jobs:
       - name: Prepare static site
         run: |
           mkdir -p dist
-          cp index.html styles.css app.js dist/
+          cp index.html styles.css db.js market.js providers.js app-core.js app-view.js app-actions.js app.js manifest.webmanifest sw.js icon.svg dist/
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
