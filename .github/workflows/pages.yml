@@ -1,4 +1,4 @@
-name: Deploy CoinPortracker to GitHub Pages
+name: Deploy CoinPortracker to GitHub Pages # deployment retry
 on:
   push:
     branches: [main]
