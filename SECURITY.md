@@ -21,7 +21,7 @@
 
 ## Como reportar uma vulnerabilidade
 
-Abra uma [issue](https://github.com/ChristopherKirstusCamargo/CoinPortracker/issues) **sem detalhes exploráveis** pedindo um contato privado, ou use "Report a vulnerability" (GitHub Security Advisories) neste repositório. Não publique endereços, saldos ou arquivos de backup reais.
+Abra uma issue neste repositório **sem detalhes exploráveis** pedindo um contato privado, ou use "Report a vulnerability" (GitHub Security Advisories) neste repositório. Não publique endereços, saldos ou arquivos de backup reais.
 
 ---
 

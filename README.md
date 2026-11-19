@@ -6,9 +6,9 @@
 
 ## Por que este app existe
 
-O CoinPortracker nasceu de uma necessidade simples do Christopher: acompanhar todas as carteiras de cripto num só lugar **sem entregar chaves nem dados a terceiros**. Os rastreadores populares pedem conta, enviam seu patrimônio para servidores de outra empresa, mostram anúncios ou pedem para "conectar a carteira". Ele queria o contrário: um app **privado, somente leitura (watch-only)**, que lê endereços públicos direto da blockchain, guarda tudo cifrado no próprio aparelho e tem a cara que ele gosta, **preto e branco, minimalista**, com verde e vermelho só para alta e queda.
+O CoinPortracker nasceu para acompanhar todas as carteiras de cripto num só lugar **sem entregar chaves nem dados a terceiros**. Os rastreadores populares pedem conta, enviam o patrimônio para servidores de outra empresa, mostram anúncios ou pedem para "conectar a carteira". Este projeto faz o contrário: é um app **privado e somente leitura (watch-only)**, que lê endereços públicos direto da blockchain, guarda tudo cifrado no próprio aparelho e segue um visual **preto e branco, minimalista**, com verde e vermelho só para alta e queda.
 
-O projeto começou em 12/11/2026 e evoluiu da 1.0 até esta 6.0.0, a versão final.
+O desenvolvimento começou em 12/11/2026 e evoluiu da 1.0 até esta 6.0.0, a versão final.
 
 ## O que ele faz
 
@@ -60,7 +60,7 @@ Para assinar o release, crie `keystore.properties` na raiz com `storeFile`, `sto
 
 ## English
 
-**CoinPortracker** is a private, **watch-only** crypto portfolio tracker for Android. Christopher built it because he wanted to follow all his wallets in one place without handing keys or data to third parties, in his own black-and-white minimalist style. You paste public addresses; the app reads balances, history and staking directly from public blockchain endpoints and keeps everything encrypted on the phone (SQLCipher + Android Keystore). No account, no ads, no telemetry, no backend.
+**CoinPortracker** is a private, **watch-only** crypto portfolio tracker for Android. It exists to follow every wallet in one place without handing keys or data to third parties, with a black-and-white minimalist design. You paste public addresses; the app reads balances, history and staking directly from public blockchain endpoints and keeps everything encrypted on the phone (SQLCipher + Android Keystore). No account, no ads, no telemetry, no backend.
 
 **Install:** download [`release/CoinPortracker.apk`](release/CoinPortracker.apk), check its SHA-256 against [`release/CoinPortracker.apk.sha256`](release/CoinPortracker.apk.sha256), allow "Install unknown apps" if asked, and install. Requires Android 8.0+.
 
