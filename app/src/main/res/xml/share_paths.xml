@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Só a pasta temporária do cartão de compartilhar é exposta (somente leitura, por permissão temporária). -->
+<paths>
+    <cache-path name="share" path="share/" />
+</paths>
