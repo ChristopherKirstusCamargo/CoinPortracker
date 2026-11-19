@@ -1,0 +1,28 @@
+# Gradle / Android Studio
+.gradle/
+build/
+.kotlin/
+.idea/
+*.iml
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Local machine and signing (never commit)
+local.properties
+keystore.properties
+*.jks
+*.keystore
+*.p12
+*.pem
+
+# Build outputs (the published APK lives only in release/)
+dist/
+*.aab
+app/release/
+*.apk
+!release/CoinPortracker.apk
+
+# OS
+.DS_Store
+Thumbs.db
