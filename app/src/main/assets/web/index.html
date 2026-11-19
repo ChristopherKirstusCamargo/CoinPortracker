@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta name="color-scheme" content="dark">
+<title>CoinPortracker Web</title>
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/app.css">
+<script src="/app.js" defer></script>
+</head>
+<body>
+<noscript><p class="pad">Ative o JavaScript para ver o painel.</p></noscript>
+
+<section id="pair" class="pair" hidden>
+  <div class="pair-card">
+    <div class="brand"><span class="mark" aria-hidden="true"></span>CoinPortracker <span class="muted">Web</span></div>
+    <h1>Parear este navegador</h1>
+    <p class="muted">No celular, abra <b>Ajustes › Web Host</b>, ligue o painel e digite aqui o código que aparece na tela (ou leia o QR).</p>
+    <form id="pairForm" autocomplete="off">
+      <label for="code" class="sr">Código de pareamento</label>
+      <input id="code" name="code" inputmode="text" maxlength="12" spellcheck="false" autocapitalize="characters" placeholder="ABCD-2345" required>
+      <button id="pairBtn" type="submit" class="btn primary">Parear</button>
+    </form>
+    <p id="pairMsg" class="msg" role="status" aria-live="polite"></p>
+    <p class="note"><span class="dot warn" aria-hidden="true"></span>Conexão sem criptografia (HTTP) na sua rede local. Use só em redes de confiança. O painel é somente leitura.</p>
+  </div>
+</section>
+
+<section id="app" hidden>
+  <header class="top">
+    <div class="brand"><span class="mark" aria-hidden="true"></span>CoinPortracker <span class="muted">Web</span></div>
+    <div class="top-right">
+      <span class="chip">Somente leitura</span>
+      <span id="conn" class="chip" title="Estado da conexão com o celular">Conectado</span>
+      <button id="logout" class="btn ghost" type="button">Sair</button>
+    </div>
+  </header>
+  <div id="offline" class="banner" hidden>Sem conexão com o celular. Tentando de novo…</div>
+  <div id="httpNote" class="banner subtle">HTTP sem criptografia — use só no seu Wi-Fi. Os controles ficam no app.</div>
+
+  <main class="wrap">
+    <section class="card hero">
+      <div class="label">Patrimônio</div>
+      <div id="total" class="total">—</div>
+      <div class="row gap">
+        <span id="chg" class="pill">—</span><span class="muted small">24 h</span>
+        <span id="updated" class="muted small right"></span>
+      </div>
+      <div id="real" class="kv-grid" hidden>
+        <div><div class="label">Investido</div><div id="invested" class="v">—</div></div>
+        <div><div class="label">Resultado real</div><div id="result" class="v">—</div></div>
+        <div><div class="label">Realizado</div><div id="realized" class="v">—</div></div>
+        <div><div class="label">Não realizado</div><div id="unrealized" class="v">—</div></div>
+      </div>
+      <div class="chart-box">
+        <svg id="chart" viewBox="0 0 600 180" preserveAspectRatio="none" role="img" aria-label="Gráfico do patrimônio"></svg>
+        <div id="chartMsg" class="muted small center"></div>
+      </div>
+      <div id="ranges" class="seg" role="tablist" aria-label="Período">
+        <button data-r="D1">1D</button><button data-r="W1">1S</button><button data-r="M1" class="on">1M</button><button data-r="Y1">1A</button><button data-r="ALL">Tudo</button>
+      </div>
+    </section>
+
+    <nav id="tabs" class="tabs" role="tablist">
+      <button data-t="assets" class="on">Ativos</button><button data-t="allocation">Alocação</button><button data-t="staking">Staking</button><button data-t="activity">Atividade</button>
+    </nav>
+
+    <section id="t-assets" class="card tab">
+      <div class="tools">
+        <input id="assetQ" type="search" placeholder="Buscar ativo ou rede" aria-label="Buscar ativo">
+        <select id="assetSort" aria-label="Ordenar"><option value="value">Maior valor</option><option value="change">Variação 24 h</option><option value="pnl">Resultado</option><option value="name">Nome</option></select>
+      </div>
+      <div id="assetList" class="list"></div>
+    </section>
+
+    <section id="t-allocation" class="card tab" hidden>
+      <div class="seg small" id="allocSeg"><button data-a="byAsset" class="on">Ativo</button><button data-a="byNetwork">Rede</button><button data-a="byWallet">Carteira</button></div>
+      <div id="allocList" class="list"></div>
+    </section>
+
+    <section id="t-staking" class="card tab" hidden>
+      <div class="row"><div class="label">Rendimentos de staking</div><div id="stakeTotal" class="v right">—</div></div>
+      <div id="stakeList" class="list"></div>
+    </section>
+
+    <section id="t-activity" class="card tab" hidden>
+      <div class="tools">
+        <input id="actQ" type="search" placeholder="Buscar ativo, rede ou carteira" aria-label="Buscar na atividade">
+        <select id="actKind" aria-label="Tipo"><option value="">Tudo</option><option value="IN">Entradas</option><option value="OUT">Saídas</option><option value="SWAP">Swaps</option><option value="REWARD">Rendimentos</option><option value="SELF">Entre contas</option><option value="OTHER">Outros</option></select>
+      </div>
+      <div id="actList" class="list"></div>
+      <button id="actMore" class="btn ghost wide" type="button" hidden>Carregar mais</button>
+    </section>
+    <p class="foot muted small">Valores calculados no celular, com as mesmas regras do app. Nada pode ser alterado por aqui.</p>
+  </main>
+</section>
+</body>
+</html>

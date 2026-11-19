@@ -1,0 +1,18 @@
+# Baseline Profile (AOT na instalação via ProfileInstaller): caminho de abertura e telas principais.
+# Compose, Material3, Coil e Room já trazem seus próprios perfis; aqui ficam as classes do app.
+HSPLcom/coinportracker/CoinPortrackerApp;->**(**)**
+HSPLcom/coinportracker/MainActivity;->**(**)**
+HSPLcom/coinportracker/ui/**;->**(**)**
+HSPLcom/coinportracker/ui/components/**;->**(**)**
+HSPLcom/coinportracker/ui/screens/**;->**(**)**
+HSPLcom/coinportracker/ui/theme/**;->**(**)**
+HSPLcom/coinportracker/data/**;->**(**)**
+HSPLcom/coinportracker/onchain/**;->**(**)**
+HSPLcom/coinportracker/portfolio/**;->**(**)**
+HSPLcom/coinportracker/settings/**;->**(**)**
+HSPLcom/coinportracker/core/**;->**(**)**
+HSPLcom/coinportracker/database/**;->**(**)**
+Lcom/coinportracker/**;
+HSPLcom/coinportracker/history/**;->**(**)**
+HSPLcom/coinportracker/portfolio/**;->**(**)**
+HSPLcom/coinportracker/core/**;->**(**)**
