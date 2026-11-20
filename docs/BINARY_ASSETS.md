@@ -1,6 +1,6 @@
 # Arquivos binários do projeto
 
-Estes arquivos fazem parte do código-fonte e são necessários para compilar. Como são binários, podem não estar presentes em todas as cópias do repositório. Confira cada um pelo SHA-256.
+Estes arquivos fazem parte do código-fonte e são necessários para compilar. Tamanho e SHA-256 de cada um, para conferência (por exemplo, `sha256sum <caminho>`).
 
 | Caminho | Bytes | SHA-256 |
 |---|---:|---|

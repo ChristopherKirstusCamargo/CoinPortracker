@@ -36,7 +36,7 @@ O desenvolvimento começou em 12/11/2026. O app passou por 1.0 (livro contábil 
 
 ## Instalar pelo APK
 
-1. No celular Android (**8.0 ou mais novo**), baixe [`release/CoinPortracker.apk`](release/CoinPortracker.apk).
+1. No celular Android (**8.0 ou mais novo**), baixe o APK da [versão mais recente](../../releases/latest) (arquivo `CoinPortracker.apk`) ou direto do repositório: [`release/CoinPortracker.apk`](release/CoinPortracker.apk?raw=true).
 2. **Confira a integridade.** O SHA-256 do arquivo precisa ser igual ao de [`release/CoinPortracker.apk.sha256`](release/CoinPortracker.apk.sha256):
    - Linux: `sha256sum CoinPortracker.apk`
    - macOS: `shasum -a 256 CoinPortracker.apk`
@@ -113,7 +113,6 @@ Requisitos: **JDK 17** e **Android SDK** (platform 35, build-tools 35).
 ```bash
 git clone <endereço deste repositório>
 cd CoinPortracker
-chmod +x gradlew
 echo "sdk.dir=/caminho/para/android-sdk" > local.properties
 ./gradlew testDebugUnitTest      # testes
 ./gradlew assembleRelease        # APK em app/build/outputs/apk/release/
@@ -123,7 +122,7 @@ Testes opcionais: `-Plive=true` (consultas reais às redes) e `-Pshots=true` (ca
 
 Para assinar o release, crie `keystore.properties` na raiz com `storeFile`, `storePassword`, `keyAlias` e `keyPassword`. Sem ele, o release sai assinado com a chave de debug. Keystores e senhas nunca vão para o repositório (`.gitignore`).
 
-Alguns arquivos binários necessários para compilar (fontes Inter, ícones, GIF padrão, modelos de super-resolução, listas de tokens e o `gradle-wrapper.jar`) estão listados em [docs/BINARY_ASSETS.md](docs/BINARY_ASSETS.md).
+Os arquivos binários do projeto (fontes Inter, ícones, GIF padrão, modelos de super-resolução, listas de tokens e o `gradle-wrapper.jar`) estão no repositório; tamanhos e SHA-256 de cada um ficam em [docs/BINARY_ASSETS.md](docs/BINARY_ASSETS.md).
 
 **Stack:** Kotlin 2.1, Compose BOM 2024.12, Material 3, Room 2.6 + SQLCipher 4.6, DataStore, WorkManager, OkHttp 4.12, kotlinx.serialization, Coil 2.7, Media3 1.6, ZXing 3.5, LiteRT e androidx.biometric. Sem Firebase, sem SDK de analytics. O Web Host usa um servidor HTTP próprio, sem dependências novas.
 
@@ -151,7 +150,7 @@ Alguns arquivos binários necessários para compilar (fontes Inter, ícones, GIF
 - **Full encrypted backup** with non-destructive restore.
 
 ### Install
-1. Download [`release/CoinPortracker.apk`](release/CoinPortracker.apk) on an Android 8.0+ phone.
+1. On an Android 8.0+ phone, download `CoinPortracker.apk` from the [latest release](../../releases/latest) or straight from the repository: [`release/CoinPortracker.apk`](release/CoinPortracker.apk?raw=true).
 2. Verify its SHA-256 against [`release/CoinPortracker.apk.sha256`](release/CoinPortracker.apk.sha256):
    - Linux: `sha256sum`
    - macOS: `shasum -a 256`
@@ -178,7 +177,6 @@ The dashboard is read-only and served only to the local network. Pairing is code
 JDK 17 + Android SDK 35, then:
 
 ```bash
-chmod +x gradlew
 ./gradlew testDebugUnitTest
 ./gradlew assembleRelease
 ```
