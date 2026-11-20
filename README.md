@@ -113,6 +113,7 @@ Requisitos: **JDK 17** e **Android SDK** (platform 35, build-tools 35).
 ```bash
 git clone <endereço deste repositório>
 cd CoinPortracker
+chmod +x gradlew
 echo "sdk.dir=/caminho/para/android-sdk" > local.properties
 ./gradlew testDebugUnitTest      # testes
 ./gradlew assembleRelease        # APK em app/build/outputs/apk/release/
@@ -177,6 +178,7 @@ The dashboard is read-only and served only to the local network. Pairing is code
 JDK 17 + Android SDK 35, then:
 
 ```bash
+chmod +x gradlew
 ./gradlew testDebugUnitTest
 ./gradlew assembleRelease
 ```
