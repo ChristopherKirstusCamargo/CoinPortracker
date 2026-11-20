@@ -1,0 +1,23 @@
+INSTRUMENTATION_STATUS: class=com.coinportracker.MigrationInstrumentedTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=3
+INSTRUMENTATION_STATUS: stream=
+com.coinportracker.MigrationInstrumentedTest:
+INSTRUMENTATION_STATUS: test=migrate1To3
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=com.coinportracker.MigrationInstrumentedTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=3
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=migrate1To3
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: class=com.coinportracker.SrEngineInstrumentedTest
+INSTRUMENTATION_STATUS: current=2
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=3
+INSTRUMENTATION_STATUS: stream=
+com.coinportracker.SrEngineInstrumentedTest:
+INSTRUMENTATION_STATUS: test=gifModelMatchesReference
+INSTRUMENTATION_STATUS_CODE: 1
