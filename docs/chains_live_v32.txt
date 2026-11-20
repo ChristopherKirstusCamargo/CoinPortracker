@@ -1,0 +1,16 @@
+Leitura ao vivo v3.2 (13/11/2026, BRT) — ./gradlew testDebugUnitTest --tests '*ChainsV32Test' -Plive=true
+LIVE STELLAR: XLM 4042.9224663 via [horizon.stellar.org] (253 ms)
+LIVE TRON: TRX 143.96021, USDC 0.681669, USDT 5458.630546 via [api.trongrid.io] (730 ms)
+LIVE XRP: XRP 1661.745264 via [xrplcluster.com] (1303 ms)
+LIVE CARDANO:  via [api.koios.rest] (694 ms)
+LIVE DOGECOIN: DOGE 62222.06467666 via [dogechain.com] (108 ms)
+LIVE TON: TON 1592542.343486242 via [toncenter.com] (213 ms)
+LIVE COSMOS: ATOM 343980234.986437 via [cosmos-rest.publicnode.com] (128 ms)
+LIVE NEAR: NEAR 145768.497181409676817125837428 via [rpc.mainnet.near.org] (3212 ms)
+LIVE SUI: SUI 32.018584912 via [graphql.mainnet.sui.io] (81 ms)
+LIVE APTOS: APT 111.20868786 via [api.mainnet.aptoslabs.com] (174 ms)
+LIVE LITECOIN: LTC 0.00189476 · 50 movimentos
+LIVE POLYGON: POL 592.719867156693654977 · 1 saldos · [RPC público] · [Polygon: tokens não lidos agora (lista de tokens vazia).]
+LIVE AVALANCHE: AVAX 0.324952024142594956 · 1 saldos · [RPC público] · [Avalanche C-Chain: tokens não lidos agora (lista de tokens vazia).]
+LIVE OPTIMISM: ETH 0.181079591875347535 · 117 saldos · [RPC público, Blockscout] · []
+LIVE preços nativos: ETH=1957.947989, ETH=1957.947989, ETH=1957.947989, ETH=1957.947989, POL=0.0871375771, BNB=638.7657953500001, SOL=80.52, BTC=69236.86, AVAX=8.403051605, LTC=49.28, DOGE=0.065164178825, XLM=0.1465613685, TRX=0.3122046875, XRP=1.0199951928000002, ADA=0.17121404968, TON=1.1517605567500002, ATOM=1.397677945, NEAR=3.5476, SUI=0.7999433385, APT=0.5460917315
