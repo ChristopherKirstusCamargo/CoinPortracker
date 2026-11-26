@@ -47,6 +47,8 @@ data class SyncStatus(
     val lastPriceSync: Long? = null,
     val warnings: List<String> = emptyList(),
     val error: String? = null,
+    /** Alguma rede respondeu e outra não. O saldo que falhou permanece o último confirmado. */
+    val partial: Boolean = false,
 )
 
 /** Intervalos do gráfico do portfólio (estilo CoinStats). */
@@ -147,25 +149,43 @@ class ChainPortfolioRepository(
         db.chain().clearWallet(id); db.chain().clearActivity(id)
     }
 
-    /** Sincroniza saldos (e histórico) de todas as carteiras; falhas parciais preservam o último saldo conhecido. */
-    suspend fun syncAll(withHistory: Boolean, onlyWallet: Long? = null): Outcome<Int> = syncLock.withLock {
+    /**
+     * Sincroniza saldos (e, se pedido, histórico). Falha total não avança [SyncStatus.lastBalanceSync]
+     * nem zera o que já estava salvo. [quick] pula o stake nativo da Solana (caro) e preserva o stake anterior.
+     * [silent] não acende o indicador de "atualizando" — usado no ciclo automático.
+     */
+    suspend fun syncAll(
+        withHistory: Boolean,
+        onlyWallet: Long? = null,
+        onlyNetworks: Set<Network>? = null,
+        quick: Boolean = false,
+        silent: Boolean = false,
+    ): Outcome<Int> = syncLock.withLock {
         val wallets = db.wallets().all().filter { !it.archived && isWatch(it) && (onlyWallet == null || it.id == onlyWallet) }
-        if (wallets.isEmpty()) { refreshPrices(); return@withLock Outcome.Ok(0) }
-        _status.update { it.copy(syncing = true, error = null) }
+        if (wallets.isEmpty()) {
+            if (!silent) refreshPrices()
+            return@withLock Outcome.Ok(0)
+        }
+        val pairs = wallets.flatMap { w ->
+            val nets = AddressKind.fromStored(w.chain)!!.networks.let { all -> if (onlyNetworks == null) all else all.filter { it in onlyNetworks } }
+            nets.map { n -> w to n }
+        }
+        if (pairs.isEmpty()) return@withLock Outcome.Ok(0)
+        if (!silent) _status.update { it.copy(syncing = true, error = null) }
         val warnings = ArrayList<String>()
         val okN = java.util.concurrent.atomic.AtomicInteger(); val failN = java.util.concurrent.atomic.AtomicInteger()
         val sem = Semaphore(4)
         coroutineScope {
-            wallets.flatMap { w -> AddressKind.fromStored(w.chain)!!.networks.map { n -> w to n } }.map { (w, n) ->
+            pairs.map { (w, n) ->
                 async {
                     sem.withPermit {
-                        val r = scanOne(n, w.address!!, false) // v3: histórico vem do HistoryRepository (paginado)
+                        val r = scanOne(n, w.address!!, false, quick)
                         when (r) {
                             is Outcome.Ok -> {
-                            val extra = if (n.family == com.coinportracker.onchain.ChainFamily.EVM) evm.customTokens(n, w.address!!) else emptyList()
-                            persist(w.id, n, r.value.copy(holdings = r.value.holdings + extra), withHistory)
-                            synchronized(warnings) { warnings += r.value.warnings }; okN.incrementAndGet()
-                        }
+                                val extra = if (n.family == ChainFamily.EVM) evm.customTokens(n, w.address!!) else emptyList()
+                                persist(w.id, n, r.value.copy(holdings = r.value.holdings + extra), withHistory)
+                                synchronized(warnings) { warnings += r.value.warnings }; okN.incrementAndGet()
+                            }
                             is Outcome.Err -> { synchronized(warnings) { warnings += r.message }; failN.incrementAndGet() }
                         }
                         Triple(w, n, r)
@@ -177,21 +197,35 @@ class ChainPortfolioRepository(
                 db.wallets().update(w.copy(lastSyncAt = if (allFailed) w.lastSyncAt else clock(), lastSyncError = if (allFailed) (results.first().third as Outcome.Err).message else null))
             }
         }
-        _status.update { it.copy(syncing = false, lastBalanceSync = clock(), warnings = warnings.distinct().take(12), error = if (okN.get() == 0 && failN.get() > 0) "Sem conexão com as redes agora. Mostrando o último saldo salvo." else null) }
-        refreshPrices()
-        Outcome.Ok(okN.get())
+        val ok = okN.get(); val fail = failN.get()
+        val label = SyncFailure.label(warnings, ok, fail)
+        _status.update {
+            it.copy(
+                syncing = false,
+                lastBalanceSync = if (ok > 0) clock() else it.lastBalanceSync,
+                warnings = warnings.distinct().take(12),
+                error = if (fail > 0 && ok == 0) label else if (ok > 0) null else it.error,
+                partial = ok > 0 && fail > 0,
+            )
+        }
+        if (!silent || withHistory) refreshPrices(fast = silent)
+        Outcome.Ok(ok)
     }
 
-    private suspend fun scanOne(n: Network, address: String, withHistory: Boolean): Outcome<ScanResult> = when (n.family) {
+    private suspend fun scanOne(n: Network, address: String, withHistory: Boolean, quick: Boolean): Outcome<ScanResult> = when (n.family) {
         ChainFamily.EVM -> evm.scan(n, address, withHistory)
-        ChainFamily.SOLANA -> sol.scan(address, withHistory)
+        ChainFamily.SOLANA -> sol.scan(address, withHistory, quick)
         ChainFamily.BITCOIN -> btc.scan(address, withHistory, n)
         ChainFamily.ALT -> alt?.scan(n, address) ?: Outcome.Err("${n.label}: leitor indisponível")
     }
 
     private suspend fun persist(walletId: Long, n: Network, r: ScanResult, withHistory: Boolean) {
         val now = clock()
-        db.chain().replaceHoldings(walletId, n.name, r.holdings.map { it.toEntity(walletId, now) })
+        val merged = if (r.tokensComplete && r.stakesComplete) r.holdings else {
+            val prev = db.chain().holdings().filter { it.walletId == walletId && it.network == n.name }.mapNotNull { it.toHolding() }
+            com.coinportracker.onchain.HoldingMerge.merge(prev, r.holdings, r.tokensComplete, r.stakesComplete)
+        }
+        db.chain().replaceHoldings(walletId, n.name, merged.map { it.toEntity(walletId, now) })
         if (withHistory && r.activity.isNotEmpty()) db.chain().upsertActivity(r.activity.map { it.toEntity(walletId) })
     }
 
@@ -209,14 +243,24 @@ class ChainPortfolioRepository(
         try {
             val keys = (db.chain().holdings().mapNotNull { it.priceKey } + extraKeys + Network.entries.map { it.nativePriceKey }).toSet()
             var r: Outcome<Map<String, com.coinportracker.onchain.LivePrice>> = Outcome.Ok(lastLlama)
-            if (com.coinportracker.dev.DevSources.priceEnabled("defillama") && (!fast || lastLlama.isEmpty() || clock() - lastLlamaAt > 60_000L || !llamaAsked.containsAll(keys))) {
+            if (com.coinportracker.dev.DevSources.priceEnabled("defillama") && (!fast || lastLlama.isEmpty() || clock() - lastLlamaAt > FAST_LLAMA_MS || !llamaAsked.containsAll(keys))) {
                 r = prices.current(keys)
                 if (r is Outcome.Ok && r.value.isNotEmpty()) { lastLlama = lastLlama + r.value; lastLlamaAt = clock(); llamaAsked = keys }
             }
-            val base = lastLlama.ifEmpty { db.chain().observePrices().first().associate { it.key to it.toLive() } }
+            val stored = db.chain().prices().associateBy { it.key }
+            val base = lastLlama.ifEmpty { stored.mapValues { it.value.toLive() } }
             val q = if (com.coinportracker.dev.DevSources.priceEnabled("kraken")) (live?.fetch(keys) as? Outcome.Ok)?.value.orEmpty() else emptyMap()
             val now = clock()
-            val merged = base.filterKeys { it in keys }.mapValues { (k, v) -> q[k]?.let { com.coinportracker.onchain.LiveQuotes.merge(v, it, now) } ?: v }
+            val merged = base.filterKeys { it in keys }.mapValues { (k, v) ->
+                val http = q[k]
+                val streamed = stored[k]?.takeIf { row -> row.fetchedAt > lastLlamaAt && row.usd > 0 }
+                when {
+                    http != null -> com.coinportracker.onchain.LiveQuotes.merge(v, http, now, maxDiff = 0.08)
+                    streamed != null && v.usd > 0 && kotlin.math.abs(streamed.usd / v.usd - 1) <= 0.12 ->
+                        com.coinportracker.onchain.LiveQuotes.merge(v, streamed.usd, streamed.fetchedAt, maxDiff = 0.12)
+                    else -> v
+                }
+            }
             if (merged.isNotEmpty()) db.chain().upsertPrices(merged.values.map { LivePriceEntity(it.key, it.usd, it.change24hPct, it.confidence, it.symbol, it.fetchedAt) })
             val fx = db.marketCache().get(FX_KEY)
             if (fx == null || clock() - fx.fetchedAt > 10 * 60_000L) (prices.usdBrl() as? Outcome.Ok)?.let { db.marketCache().upsert(MarketCacheEntity(FX_KEY, it.value.toPlainString(), "CoinGecko/Frankfurter", clock())) }
@@ -224,6 +268,34 @@ class ChainPortfolioRepository(
             _status.update { it.copy(pricing = false, lastPriceSync = if (ok) clock() else it.lastPriceSync) }
             if (ok) Outcome.Ok(merged.size) else r.map { it.size }
         } finally { _status.update { it.copy(pricing = false) } }
+    }
+
+    /**
+     * Último negócio da Kraken (WebSocket). Só grava se estiver a até 12% do preço já guardado
+     * (ou se ainda não houver preço). Não substitui quantidade on-chain.
+     */
+    suspend fun noteStreamPrices(updates: Map<String, Double>) {
+        if (updates.isEmpty()) return
+        priceLock.withLock {
+            val now = clock()
+            val want = (db.chain().holdings().mapNotNull { it.priceKey } + Network.entries.map { it.nativePriceKey }).toSet()
+            val current = db.chain().prices().associateBy { it.key }
+            val rows = ArrayList<LivePriceEntity>()
+            for ((k, usd) in updates) {
+                if (k !in want || usd <= 0.0 || usd.isNaN() || usd.isInfinite()) continue
+                val prev = current[k]
+                if (prev != null && prev.usd > 0 && kotlin.math.abs(usd / prev.usd - 1) > 0.12) continue
+                val ch = prev?.change24h?.let { c ->
+                    val base = prev.usd / (1 + c / 100.0)
+                    if (base > 0) (usd / base - 1) * 100 else c
+                }
+                rows += LivePriceEntity(k, usd, ch ?: prev?.change24h, prev?.confidence, prev?.symbol, now)
+            }
+            if (rows.isNotEmpty()) {
+                db.chain().upsertPrices(rows)
+                _status.update { it.copy(lastPriceSync = now) }
+            }
+        }
     }
 
     /** Série do valor do portfólio no intervalo, em USD (cache por intervalo). */
@@ -251,6 +323,8 @@ class ChainPortfolioRepository(
 
     companion object {
         const val FX_KEY = "fx:usdbrl"
+        /** No ciclo rápido, o DefiLlama (cache de minutos) não é chamado mais de uma vez a cada 30 s. */
+        const val FAST_LLAMA_MS = 30_000L
 
         fun TokenHolding.toEntity(walletId: Long, now: Long) = ChainHoldingEntity(walletId, network.name, tokenKey, symbol, name, decimals, amount.toPlainString(),
             iconUrl, priceKey, kind.name, verified, flaggedScam, priceUsdHint, coingeckoId, now)

@@ -53,7 +53,7 @@ data class AppSettings(
     val hiddenTokens: Set<String> = emptySet(),
     /** Banner/GIF atrás do saldo (discreto). */
     val banner: BannerStyle = BannerStyle(),
-    /** "Saldo ao vivo (suave)": atualiza o saldo a cada 1 s interpolando entre valores reais buscados. Desligado por padrão. */
+    /** Cotações rápidas e saldos on-chain em 12–30 s (ou por evento da rede). O número exibido não é interpolado. Desligado por padrão. */
     val liveBalance: Boolean = false,
     /** Usa o preço médio estimado pela blockchain quando você não informou um. */
     val useEstimatedCost: Boolean = true,

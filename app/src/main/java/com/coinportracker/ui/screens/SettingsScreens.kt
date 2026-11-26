@@ -229,7 +229,7 @@ fun SettingsCategoryScreen(vm: com.coinportracker.ui.UiModel, nav: NavHostContro
                 SettingsCat.REFRESH -> {
                     Group("Atualização automática") {
                         ChoiceRow(null, listOf(0, 30, 60), st.foregroundRefreshSec, { if (it == 0) "Desligada" else "${it} s" }) { v -> vm.updateSettings { it.copy(foregroundRefreshSec = v) } }
-                        SwitchRow("Saldo ao vivo", "Atualiza a cada segundo", st.liveBalance) { v -> vm.updateSettings { it.copy(liveBalance = v) } }
+                        SwitchRow("Saldo ao vivo", "Cotações em segundos e saldos on-chain em cerca de 15–30 s, ou quando a rede avisa. O número só muda com valor real.", st.liveBalance) { v -> vm.updateSettings { it.copy(liveBalance = v) } }
                     }
                     Group("Lista de ativos") {
                         SwitchRow("Ocultar saldos pequenos", "Abaixo de US$ 1", st.hideSmallBalances) { v -> vm.updateSettings { it.copy(hideSmallBalances = v) } }

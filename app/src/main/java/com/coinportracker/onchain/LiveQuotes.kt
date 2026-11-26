@@ -21,12 +21,20 @@ class LiveQuotes(private val http: HttpClient) {
         val want = supported(keys)
         if (want.isEmpty()) return Outcome.Ok(emptyMap())
         val pairs = want.mapNotNull { pairOf(it) }.distinct()
-        val r = http.get("kraken", com.coinportracker.dev.DevSources.priceUrl("kraken", "https://api.kraken.com").trimEnd('/') + "/0/public/Ticker?pair=" + pairs.joinToString(","), policy)
-        if (r is Outcome.Err) return r
-        val last = runCatching { parseKraken(chainJson.parseToJsonElement((r as Outcome.Ok).value)) }.getOrElse { return Outcome.Err("Kraken: resposta inválida", it) }
         val out = HashMap<String, Double>()
-        for (k in want) { val p = pairOf(k) ?: continue; last[p]?.let { out[k] = it } }
-        return Outcome.Ok(out)
+        var anyOk = false
+        var lastErr: Outcome.Err? = null
+        val base = com.coinportracker.dev.DevSources.priceUrl("kraken", "https://api.kraken.com").trimEnd('/')
+        // lotes: um par desconhecido não zera a cotação dos outros
+        for (chunk in pairs.chunked(12)) {
+            val r = http.get("kraken", "$base/0/public/Ticker?pair=" + chunk.joinToString(","), policy)
+            if (r is Outcome.Err) { lastErr = r; continue }
+            val last = runCatching { parseKraken(chainJson.parseToJsonElement((r as Outcome.Ok).value)) }.getOrNull()
+            if (last == null) { lastErr = Outcome.Err("Kraken: resposta inválida"); continue }
+            anyOk = true
+            for (k in want) { val p = pairOf(k) ?: continue; if (p in chunk) last[p]?.let { out[k] = it } }
+        }
+        return if (!anyOk && lastErr != null) lastErr else Outcome.Ok(out)
     }
 
     companion object {
@@ -38,21 +46,71 @@ class LiveQuotes(private val http: HttpClient) {
             "coingecko:polygon-ecosystem-token" to "POLUSD", "coingecko:matic-network" to "POLUSD",
             "coingecko:arbitrum" to "ARBUSD", "coingecko:optimism" to "OPUSD",
             "coingecko:chainlink" to "LINKUSD", "coingecko:dogecoin" to "XDGUSD",
+            "coingecko:ripple" to "XRPUSD", "coingecko:litecoin" to "LTCUSD",
+            "coingecko:cardano" to "ADAUSD", "coingecko:polkadot" to "DOTUSD",
+            "coingecko:avalanche-2" to "AVAXUSD", "coingecko:cosmos" to "ATOMUSD",
+            "coingecko:tron" to "TRXUSD", "coingecko:sui" to "SUIUSD",
+            "coingecko:near" to "NEARUSD", "coingecko:uniswap" to "UNIUSD",
+            "coingecko:aave" to "AAVEUSD", "coingecko:injective-protocol" to "INJUSD",
+            "coingecko:pepe" to "PEPEUSD", "coingecko:shiba-inu" to "SHIBUSD",
+            "coingecko:filecoin" to "FILUSD", "coingecko:aptos" to "APTUSD",
+            "coingecko:celestia" to "TIAUSD", "coingecko:sei-network" to "SEIUSD",
+            "coingecko:the-open-network" to "TONUSD", "coingecko:hedera-hashgraph" to "HBARUSD",
+            "coingecko:internet-computer" to "ICPUSD", "coingecko:stellar" to "XLMUSD",
+            "coingecko:bitcoin-cash" to "BCHUSD", "coingecko:dogwifcoin" to "WIFUSD",
+            "coingecko:bittensor" to "TAOUSD", "coingecko:render-token" to "RENDERUSD",
             "coingecko:jupiter-exchange-solana" to "JUPUSD", "coingecko:bonk" to "BONKUSD",
             "solana:So11111111111111111111111111111111111111112" to "SOLUSD",
             "solana:JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN" to "JUPUSD",
             "solana:DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263" to "BONKUSD",
         )
         /** Nome do par na resposta da Kraken (alguns vêm com prefixos X/Z). */
-        private val RESULT = mapOf("XBTUSD" to "XXBTZUSD", "ETHUSD" to "XETHZUSD", "XDGUSD" to "XDGUSD")
+        private val RESULT = mapOf(
+            "XBTUSD" to "XXBTZUSD", "ETHUSD" to "XETHZUSD", "XDGUSD" to "XXDGZUSD",
+            "XRPUSD" to "XXRPZUSD", "LTCUSD" to "XLTCZUSD", "XLMUSD" to "XXLMZUSD",
+        )
 
         fun pairOf(key: String): String? = BY_KEY[key]
+
+        fun wsSymbols(): List<String> = BY_KEY.values.toSet().map { wsSymbol(it) }.sorted()
+
+        fun wsSymbol(pair: String): String = when (pair) {
+            "XBTUSD" -> "BTC/USD"
+            "XDGUSD" -> "DOGE/USD"
+            else -> pair.removeSuffix("USD") + "/USD"
+        }
+
+        fun keysForWsSymbol(symbol: String): List<String> {
+            val pair = when (symbol) {
+                "BTC/USD" -> "XBTUSD"
+                "DOGE/USD" -> "XDGUSD"
+                else -> symbol.replace("/", "")
+            }
+            return BY_KEY.filterValues { it == pair }.keys.toList()
+        }
+
+        /** Ticker v2: `{"channel":"ticker","data":[{"symbol":"XRP/USD","last":0.95}]}`. */
+        fun parseKrakenWs(el: JsonElement): Map<String, Double> {
+            val o = el.o() ?: return emptyMap()
+            if (o["channel"].s() != "ticker") return emptyMap()
+            val out = HashMap<String, Double>()
+            for (row in o["data"].a().orEmpty()) {
+                val r = row.o() ?: continue
+                val sym = r["symbol"].s() ?: continue
+                val last = r["last"].s()?.toDoubleOrNull() ?: continue
+                if (last <= 0.0 || last.isNaN() || last.isInfinite()) continue
+                for (k in keysForWsSymbol(sym)) out[k] = last
+            }
+            return out
+        }
 
         fun parseKraken(el: JsonElement): Map<String, Double> {
             val res = el.o()?.get("result").o() ?: return emptyMap()
             val out = HashMap<String, Double>()
             for (pair in BY_KEY.values.toSet()) {
-                val o = (res[RESULT[pair] ?: pair] ?: res[pair]).o() ?: continue
+                val alt = RESULT[pair]
+                val node = (if (alt != null) res[alt] else null) ?: res[pair]
+                val o = node.o() ?: continue
                 o["c"].a()?.firstOrNull()?.s()?.toDoubleOrNull()?.takeIf { it > 0 }?.let { out[pair] = it }
             }
             return out

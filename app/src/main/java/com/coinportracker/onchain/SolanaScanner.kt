@@ -22,7 +22,7 @@ class SolanaScanner(private val http: HttpClient, private val rpc: JsonRpc, priv
 
     data class JupToken(val mint: String, val symbol: String, val name: String, val icon: String?, val decimals: Int?, val verified: Boolean, val organicScore: Double?, val usdPrice: Double?)
 
-    suspend fun scan(address: String, withHistory: Boolean): Outcome<ScanResult> = coroutineScope {
+    suspend fun scan(address: String, withHistory: Boolean, quick: Boolean = false): Outcome<ScanResult> = coroutineScope {
         val addr = address.trim()
         val warnings = ArrayList<String>()
         val bal = rpc.call(com.coinportracker.dev.DevSources.rpcs(net), "getBalance", """["$addr"]""")
@@ -32,13 +32,13 @@ class SolanaScanner(private val http: HttpClient, private val rpc: JsonRpc, priv
         if (lamports.signum() > 0) holdings += TokenHolding(net, "native", "SOL", "Solana", 9, scaled(lamports, 9), net.iconUrl, net.nativePriceKey, HoldingKind.NATIVE, true, coingeckoId = "solana")
 
         val tokenDefs = programs.map { pid -> async { rpc.call(com.coinportracker.dev.DevSources.rpcs(net), "getTokenAccountsByOwner", """["$addr",{"programId":"$pid"},{"encoding":"jsonParsed"}]""") } }
-        val stakeDefs = listOf(12, 44).map { off -> async { rpc.call(listOf(com.coinportracker.dev.DevSources.rpcs(net).first()), "getProgramAccounts", """["Stake11111111111111111111111111111111111111",{"encoding":"jsonParsed","filters":[{"memcmp":{"offset":$off,"bytes":"$addr"}}]}]""") } }
         val historyDef = if (withHistory) async { history(addr) } else null
 
         val raw = LinkedHashMap<String, Pair<BigDecimal, Int>>()
+        var tokensComplete = true
         tokenDefs.forEach { d ->
             when (val r = d.await()) {
-                is Outcome.Err -> warnings += "Solana: tokens não lidos agora (${r.message})."
+                is Outcome.Err -> { warnings += "Solana: tokens não lidos agora (${r.message})."; tokensComplete = false }
                 is Outcome.Ok -> parseTokenAccounts(r.value).forEach { (mint, amt, dec) -> raw[mint] = (raw[mint]?.first ?: BigDecimal.ZERO).add(amt) to dec }
             }
         }
@@ -53,6 +53,7 @@ class SolanaScanner(private val http: HttpClient, private val rpc: JsonRpc, priv
                 m?.icon, "solana:$mint", if (StakingTokens.isLiquidStaking(sym)) HoldingKind.LIQUID_STAKING else HoldingKind.TOKEN,
                 verified = m?.verified == true, priceUsdHint = m?.usdPrice)
         }
+        val stakeDefs = if (quick) emptyList() else listOf(12, 44).map { off -> async { rpc.call(listOf(com.coinportracker.dev.DevSources.rpcs(net).first()), "getProgramAccounts", """["Stake11111111111111111111111111111111111111",{"encoding":"jsonParsed","filters":[{"memcmp":{"offset":$off,"bytes":"$addr"}}]}]""") } }
         val seen = HashSet<String>()
         var stakeErr = false
         stakeDefs.forEach { d ->
@@ -70,7 +71,7 @@ class SolanaScanner(private val http: HttpClient, private val rpc: JsonRpc, priv
             is Outcome.Ok -> h.value.map { a -> meta[a.tokenKey]?.let { m -> a.copy(symbol = m.symbol.take(16), iconUrl = m.icon) } ?: a }
             is Outcome.Err -> { warnings += "Solana: histórico indisponível agora."; emptyList() }
         }
-        Outcome.Ok(ScanResult(holdings, activity, warnings, listOf("Solana RPC público", "Jupiter")))
+        Outcome.Ok(ScanResult(holdings, activity, warnings, listOf("Solana RPC público", "Jupiter"), tokensComplete = tokensComplete, stakesComplete = !quick && !stakeErr))
     }
 
     suspend fun jupiterMeta(mints: List<String>): Map<String, JupToken> {

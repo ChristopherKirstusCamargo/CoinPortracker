@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
@@ -58,7 +59,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app), UiModel {
     override val allTx = c.db.transactions().observeLatest(400).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
     override val alerts = c.db.alerts().observeAll().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
-    private var lastBalanceSync = 0L
+    private var lastBalanceSuccess = 0L
+    private var lastBalanceAttempt = 0L
+    private var balanceFailures = 0
     private var lastHistorySync = 0L
 
     private val foreground = MutableStateFlow(false)
@@ -75,9 +78,25 @@ class MainViewModel(app: Application) : AndroidViewModel(app), UiModel {
         }
         viewModelScope.launch {
             val plans = combine(foreground, c.settings.settings.map { Triple(it.foregroundRefreshSec, it.liveBalance, it.lowPower) }.distinctUntilChanged()) { fg, (sec, live, low) ->
-                if (low && fg) RefreshPlan(5 * 60_000L, false) else RefreshScheduler.plan(fg, sec, live)
+                if (low && fg) RefreshPlan(5 * 60_000L, false, true) else RefreshScheduler.plan(fg, sec, live)
             }
-            RefreshScheduler.run(plans) { p -> tick(p.live) }
+            RefreshScheduler.run(plans) { p -> tick(p) }
+        }
+        viewModelScope.launch {
+            val watches = c.db.wallets().observeAll().map { list ->
+                list.mapNotNull { w ->
+                    if (w.archived) return@mapNotNull null
+                    val addr = w.address ?: return@mapNotNull null
+                    val kind = com.coinportracker.onchain.AddressKind.fromStored(w.chain) ?: return@mapNotNull null
+                    com.coinportracker.onchain.WatchWallet(w.id, addr, kind)
+                }
+            }.distinctUntilChanged()
+            combine(foreground, c.settings.settings.map { it.lowPower }.distinctUntilChanged(), watches) { fg, low, ws ->
+                Triple(fg, low, ws)
+            }.collectLatest { (fg, low, ws) ->
+                if (!fg || low || ws.isEmpty()) return@collectLatest
+                withContext(Dispatchers.IO) { com.coinportracker.onchain.ChainWatch(c.http).run(ws, ::onChainWake, ::onStreamPrices) }
+            }
         }
         // v5.1.0: o banner atual entra como 1º item da Rolagem (uma vez) e a biblioteca é conferida
         viewModelScope.launch { com.coinportracker.media.BannerLibrary.migrateAndTidy(getApplication<Application>(), c.settings) }
@@ -106,10 +125,48 @@ class MainViewModel(app: Application) : AndroidViewModel(app), UiModel {
         }
     }
 
-    /** Um ciclo automático: preços sempre; saldos on-chain a cada 5 min. */
-    private suspend fun tick(live: Boolean) {
-        if (System.currentTimeMillis() - lastBalanceSync > 5 * 60_000L && !_refreshing.value) { fullSync(false); return }
-        c.chain.refreshPrices(fast = live)
+    /**
+     * Um ciclo automático. Cotações em todo ciclo. Saldos no intervalo de [BalanceCadence]
+     * (ao vivo: 12–30 s; 30 s/60 s: o que foi escolhido; baixo consumo: 5 min).
+     * O ciclo rápido da Solana não relê stake nativo; isso fica para a leitura completa.
+     */
+    private suspend fun tick(p: RefreshPlan) = withContext(Dispatchers.IO) {
+        val now = System.currentTimeMillis()
+        val ws = c.db.wallets().all().filter { !it.archived && c.chain.isWatch(it) }
+        val nets = ws.sumOf { com.coinportracker.onchain.AddressKind.fromStored(it.chain)?.networks?.size ?: 1 }
+        val userSec = if (p.live) 0 else (p.everyMs / 1000L).toInt()
+        val interval = BalanceCadence.balanceEveryMs(p.live, userSec, ws.size, nets, p.lowPower)
+        val due = ws.isNotEmpty() && !_refreshing.value && BalanceCadence.balanceDue(lastBalanceSuccess, lastBalanceAttempt, balanceFailures, interval, now)
+        if (due) {
+            lastBalanceAttempt = now
+            val withHistory = now - lastHistorySync > 30 * 60_000L
+            val quick = !withHistory && lastBalanceSuccess != 0L && now - lastBalanceSuccess < 3 * 60_000L
+            try {
+                val r = c.chain.syncAll(withHistory, quick = quick, silent = true)
+                val n = (r as? com.coinportracker.core.Outcome.Ok)?.value ?: 0
+                if (n > 0) {
+                    lastBalanceSuccess = System.currentTimeMillis()
+                    balanceFailures = 0
+                    if (withHistory) lastHistorySync = lastBalanceSuccess
+                } else balanceFailures = (balanceFailures + 1).coerceAtMost(6)
+            } catch (e: kotlinx.coroutines.CancellationException) { throw e }
+            catch (_: Exception) { balanceFailures = (balanceFailures + 1).coerceAtMost(6) }
+        }
+        c.chain.refreshPrices(fast = p.live || p.everyMs <= 30_000L)
+    }
+
+    private fun onChainWake(w: com.coinportracker.onchain.WatchWake) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val r = c.chain.syncAll(withHistory = false, onlyWallet = w.walletId, onlyNetworks = w.networks, quick = true, silent = true)
+            if ((r as? com.coinportracker.core.Outcome.Ok)?.value ?: 0 > 0) {
+                lastBalanceSuccess = System.currentTimeMillis()
+                balanceFailures = 0
+            }
+        }
+    }
+
+    private fun onStreamPrices(m: Map<String, Double>) {
+        viewModelScope.launch(Dispatchers.IO) { c.chain.noteStreamPrices(m) }
     }
 
     override val activityStatus get() = c.history.status
@@ -128,13 +185,22 @@ class MainViewModel(app: Application) : AndroidViewModel(app), UiModel {
     override fun fullSync(manual: Boolean) { viewModelScope.launch {
         if (manual) _refreshing.value = true
         val now = System.currentTimeMillis()
-        lastBalanceSync = now
+        lastBalanceAttempt = now
         // v6.0: puxar para atualizar também relê o histórico (antes só a cada 30 min: a Atividade parecia não atualizar)
         val withHistory = manual || now - lastHistorySync > 30 * 60_000L
         try {
-            val r = c.chain.syncAll(withHistory)
-            if (withHistory && r is Outcome.Ok) lastHistorySync = now
-        } catch (e: kotlinx.coroutines.CancellationException) { throw e } catch (_: Exception) { }
+            val r = c.chain.syncAll(withHistory, quick = false, silent = !manual)
+            val n = (r as? Outcome.Ok)?.value ?: 0
+            if (n > 0) {
+                lastBalanceSuccess = System.currentTimeMillis()
+                balanceFailures = 0
+                if (withHistory) lastHistorySync = lastBalanceSuccess
+            } else if (c.db.wallets().all().any { !it.archived && c.chain.isWatch(it) }) {
+                balanceFailures = (balanceFailures + 1).coerceAtMost(6)
+            }
+        } catch (e: kotlinx.coroutines.CancellationException) { throw e } catch (_: Exception) {
+            balanceFailures = (balanceFailures + 1).coerceAtMost(6)
+        }
         finally { if (manual) _refreshing.value = false }
         if (manual) c.chain.status.value.error?.let { toast(it) }
         // histórico real + recompensas + preço médio estimado: em segundo plano, sem segurar a tela

@@ -54,7 +54,7 @@ fun AnalysisScreen(vm: com.coinportracker.ui.UiModel, nav: NavHostController) {
             }
         }
         item(key = "alloc") {
-            CpCard(Modifier.padding(horizontal = 16.dp)) {
+            CpCard(Modifier.padding(horizontal = 16.dp).padding(top = 8.dp)) {
                 Segments(AllocBy.entries, by, { it.label }, { by = it }, Modifier.fillMaxWidth())
                 Spacer(Modifier.height(16.dp))
                 Box(Modifier.fillMaxWidth().height(220.dp), contentAlignment = Alignment.Center) {
@@ -84,7 +84,7 @@ fun AnalysisScreen(vm: com.coinportracker.ui.UiModel, nav: NavHostController) {
         if (ranked.isNotEmpty()) {
             item(key = "perfTitle") { SectionTitle("Melhores e piores (desde a compra)", Modifier.padding(horizontal = 20.dp)) }
             item(key = "perf") {
-                CpCard(Modifier.padding(horizontal = 16.dp), padding = PaddingValues(vertical = 6.dp, horizontal = 8.dp)) {
+                CpCard(Modifier.padding(horizontal = 16.dp).padding(top = 8.dp), padding = PaddingValues(vertical = 8.dp, horizontal = 12.dp)) {
                     val sorted = ranked.sortedByDescending { it.second.pnlPct }
                     val show = if (sorted.size <= 6) sorted else sorted.take(3) + sorted.takeLast(3)
                     show.forEach { (a, r) -> AssetRow(h, a, r, RowMetric.PNL, { nav.navigate("asset2/${android.net.Uri.encode(a.key)}") }, spinFirst = false) }
@@ -94,7 +94,7 @@ fun AnalysisScreen(vm: com.coinportracker.ui.UiModel, nav: NavHostController) {
         if (h.agg.staking.isNotEmpty() || h.stakingIncomeUsd.signum() != 0 || h.stakes.isNotEmpty()) {
             item(key = "stakeTitle") { SectionTitle("Staking", Modifier.padding(horizontal = 20.dp)) }
             item(key = "stake") {
-                CpCard(Modifier.padding(horizontal = 16.dp)) {
+                CpCard(Modifier.padding(horizontal = 16.dp).padding(top = 8.dp)) {
                     val total = h.agg.staking.sumOf { it.valueUsd ?: 0.0 }
                     Row {
                         Stat("Em staking", h.money(total), Modifier.weight(1f), sub = if (h.agg.totalUsd > 0) Fmt.pct(BigDecimal.valueOf(total / h.agg.totalUsd * 100), false) + " do total" else null)
@@ -124,7 +124,7 @@ fun AnalysisScreen(vm: com.coinportracker.ui.UiModel, nav: NavHostController) {
 private fun PnlHero(h: HubState, onOpen: () -> Unit) {
     val real = remember(h) { h.realPnl(null) }
     val p = h.pnl
-    CpCard(Modifier.padding(horizontal = 16.dp), onClick = onOpen) {
+    CpCard(Modifier.padding(horizontal = 16.dp).padding(top = 4.dp), onClick = onOpen) {
         if (real != null) {
             Text("Resultado", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(6.dp))

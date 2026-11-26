@@ -15,6 +15,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.ui.draw.shadow
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -62,14 +63,29 @@ import coil.request.ImageRequest
 import com.coinportracker.onchain.Network
 import com.coinportracker.ui.theme.LocalExtra
 
-/** Cartão plano, cantos de 20 dp e borda finíssima (Phantom/Trust). */
+/**
+ * Superfície de vidro: grafite translúcido, borda fina, brilho no topo e sombra curta.
+ * Sem desfoque em cada cartão — isso borra o texto e custa GPU. O vidro aqui é camada, não blur.
+ */
 @Composable
 fun CpCard(modifier: Modifier = Modifier, onClick: (() -> Unit)? = null, padding: PaddingValues = PaddingValues(16.dp), content: @Composable ColumnScope.() -> Unit) {
     val x = LocalExtra.current
-    val shape = RoundedCornerShape(20.dp)
+    val shape = RoundedCornerShape(22.dp)
     val src = remember { MutableInteractionSource() }
+    val dark = x.isDark
     Column(
-        modifier.fillMaxWidth().then(if (onClick != null) Modifier.pressScale(src, 0.98f) else Modifier).clip(shape).background(x.card).border(BorderStroke(1.dp, x.cardBorder), shape)
+        modifier.fillMaxWidth()
+            .then(if (dark) Modifier.shadow(8.dp, shape, ambientColor = Color.Black.copy(alpha = 0.45f), spotColor = Color.Black.copy(alpha = 0.30f)) else Modifier)
+            .then(if (onClick != null) Modifier.pressScale(src, 0.985f) else Modifier)
+            .clip(shape)
+            .background(Brush.verticalGradient(listOf(
+                if (dark) Color(0xFF171717).copy(alpha = 0.94f) else x.card,
+                if (dark) Color(0xFF101010).copy(alpha = 0.90f) else x.card,
+            )))
+            .drawBehind {
+                if (dark) drawRect(Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.06f), Color.Transparent), endY = size.height * 0.42f))
+            }
+            .border(BorderStroke(1.dp, if (dark) Color.White.copy(alpha = 0.10f) else x.cardBorder), shape)
             .then(if (onClick != null) Modifier.clickable(src, androidx.compose.material3.ripple(), onClick = onClick) else Modifier)
             .animateContentSize(com.coinportracker.ui.theme.Motion.spatial()).padding(padding),
         content = content,

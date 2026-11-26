@@ -65,10 +65,10 @@ fun HomeScreen(vm: com.coinportracker.ui.UiModel, nav: NavHostController) {
     var showGoal by remember { mutableStateOf(false) }
     Box(Modifier.fillMaxSize()) {
     Refreshable(refreshing, { vm.fullSync(true) }) {
-        LazyColumn(Modifier.fillMaxSize(), state = listState, contentPadding = PaddingValues(bottom = 88.dp)) {
+        LazyColumn(Modifier.fillMaxSize(), state = listState, contentPadding = PaddingValues(bottom = 28.dp)) {
             item(key = "hero", contentType = "hero") {
                 Box {
-                    Hero(h, media, sync.syncing || sync.pricing, vm, nav) { if (listState.firstVisibleItemIndex == 0) listState.firstVisibleItemScrollOffset.toFloat() else 0f }
+                    Hero(h, media, sync, vm, nav) { if (listState.firstVisibleItemIndex == 0) listState.firstVisibleItemScrollOffset.toFloat() else 0f }
                     // indicador discreto enquanto a cópia HD do banner é gerada
                     // v5.1.3: mesma fonte da Início (com a Rolagem, a mídia escolhida)
                     val hdCtx = androidx.compose.ui.platform.LocalContext.current
@@ -125,7 +125,7 @@ fun HomeScreen(vm: com.coinportracker.ui.UiModel, nav: NavHostController) {
 }
 
 @Composable
-private fun Hero(h: HubState, media: BannerMedia?, busy: Boolean, vm: com.coinportracker.ui.UiModel, nav: NavHostController, scrollPx: () -> Float) {
+private fun Hero(h: HubState, media: BannerMedia?, sync: com.coinportracker.data.SyncStatus, vm: com.coinportracker.ui.UiModel, nav: NavHostController, scrollPx: () -> Float) {
     val bg = MaterialTheme.colorScheme.background
     val style = h.settings.banner
     val clean = style.hideOverlays && style.enabled
@@ -157,7 +157,7 @@ private fun Hero(h: HubState, media: BannerMedia?, busy: Boolean, vm: com.coinpo
                     Spacer(Modifier.width(10.dp))
                     Column(Modifier.weight(1f)) {
                         Text("CoinPortracker", style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        Text(statusLine(h, busy), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(statusLine(h, sync), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
                     }
                     CurrencyToggle(h.currency) { c -> vm.updateSettings { it.copy(baseCurrency = c) } }
                 } else Spacer(Modifier.weight(1f))
@@ -181,7 +181,7 @@ private fun Hero(h: HubState, media: BannerMedia?, busy: Boolean, vm: com.coinpo
                 ChangePill(pctOf(h.agg.change24hPct), upOf(h.agg.change24hPct))
                 Spacer(Modifier.width(8.dp))
                 FitText("${if (h.hide) Fmt.MASK else Fmt.signedMoney(h.conv(chg), h.currency)} em 24 h", style = MaterialTheme.typography.labelLarge, color = changeColor(upOf(chg)), modifier = Modifier.weight(1f, fill = false), minScale = 0.75f)
-                if (h.settings.liveBalance) { Spacer(Modifier.width(8.dp)); LiveDot() }
+                if (h.settings.liveBalance) { Spacer(Modifier.width(8.dp)); LiveDot(sync.lastPriceSync) }
             }
             Spacer(Modifier.height(6.dp))
             val pnl = h.pnl
@@ -216,25 +216,44 @@ private fun LiveTotal(h: HubState) {
     }
 }
 
-/** Pontinho "ao vivo" (pulsa devagar; parado com Remover animações). */
+/** Estado da cotação. Ponto parado: piscar o tempo todo sugeriria um dado que não chegou. */
 @Composable
-private fun LiveDot() {
+private fun LiveDot(lastPrice: Long?) {
     val x = LocalExtra.current
-    val reduced = com.coinportracker.ui.theme.LocalReducedMotion.current
-    val t = androidx.compose.animation.core.rememberInfiniteTransition(label = "live")
-    val a by t.animateFloat(0.35f, 1f, androidx.compose.animation.core.infiniteRepeatable(androidx.compose.animation.core.tween(1000), androidx.compose.animation.core.RepeatMode.Reverse), label = "a")
+    val age = lastPrice?.let { System.currentTimeMillis() - it }
+    val fresh = age != null && age < 25_000L
+    val stale = age == null || age > 15 * 60_000L
+    val color = when {
+        fresh -> x.gain
+        stale -> x.warn
+        else -> MaterialTheme.colorScheme.onSurfaceVariant
+    }
+    val label = when {
+        fresh -> "preços ao vivo"
+        stale -> "preços antigos"
+        else -> "preços em cache"
+    }
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(Modifier.size(6.dp).graphicsLayer { alpha = if (reduced) 1f else a }.clip(CircleShape).background(x.gain))
+        Box(Modifier.size(6.dp).clip(CircleShape).background(color))
         Spacer(Modifier.width(4.dp))
-        Text("ao vivo", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
     }
 }
 
-internal fun statusLine(h: HubState, busy: Boolean): String {
-    if (busy) return "Atualizando…"
-    val w = h.wallets.size; val n = h.agg.byNetwork.size
+internal fun statusLine(h: HubState, sync: com.coinportracker.data.SyncStatus, now: Long = System.currentTimeMillis()): String {
+    if (sync.syncing) return "Atualizando saldos…"
+    if (sync.pricing) return "Atualizando cotações…"
+    val w = h.wallets.size
     if (w == 0) return "Nenhuma carteira"
-    return (if (w == 1) "1 carteira" else "$w carteiras") + " · " + (if (n == 1) "1 rede" else "$n redes")
+    val base = if (w == 1) "1 carteira" else "$w carteiras"
+    if (!sync.error.isNullOrBlank()) return sync.error
+    val age = sync.lastBalanceSync?.let { "saldos " + Fmt.ago(it, now, precise = true) }
+    return when {
+        sync.partial && age != null -> "Parte das redes não respondeu · $age"
+        sync.partial -> "Parte das redes não respondeu"
+        age != null -> "$base · $age"
+        else -> base
+    }
 }
 
 @Composable

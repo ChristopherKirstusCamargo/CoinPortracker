@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withTimeoutOrNull
 
-data class RefreshPlan(val everyMs: Long, val live: Boolean)
+data class RefreshPlan(val everyMs: Long, val live: Boolean, val lowPower: Boolean = false)
 
 /**
  * Laço único de atualização em primeiro plano. Cada ciclo tem tempo-limite e erros não encerram o

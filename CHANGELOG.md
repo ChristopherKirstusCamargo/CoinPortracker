@@ -1,5 +1,21 @@
 # Changelog
 
+## 6.1.0 — 26/11/2026
+
+**Saldos e cotações deixam de dividir o mesmo relógio**
+- O ciclo automático não espera mais 5 minutos para reler a blockchain. No modo ao vivo a quantidade confirmada é consultada a cada 12–30 s (conforme carteiras e redes); nos intervalos de 30 s e 60 s, a cada ciclo escolhido; em baixo consumo, a cada 5 min. A cotação continua mais frequente e recalcula o patrimônio sem reler as carteiras.
+- Falha total não avança o horário da última sincronização bem-sucedida e não troca saldo válido por zero. Leitura de tokens incompleta preserva os tokens anteriores. O texto da Início distingue "atualizando", "em cache", limite do provedor, sem conexão e atualização parcial.
+- Avisos reais, só em primeiro plano: Solana (`logsSubscribe`), Bitcoin (mempool.space), Litecoin (litecoinspace.org), EVM (`newHeads`, no máximo uma leitura da rede a cada 12 s), XRP (`subscribe`) e Stellar (stream da Horizon). O aviso não é saldo — dispara a leitura HTTP. Redes sem canal público nos provedores atuais seguem no polling.
+- Kraken cobre mais pares (XRP, LTC, ADA e outros) e, no host oficial, um ticker WebSocket. Cotação fora de faixa é descartada. O DefiLlama, no ciclo rápido, não é chamado mais de uma vez a cada 30 s.
+- O modo "Saldo ao vivo" não desenha mais passos intermediários de patrimônio. O número é o valor calculado; a animação dos dígitos continua só visual.
+
+**Mercado**
+- Máxima e mínima de 7 dias convertem a sparkline da CoinGecko, que vem em USD mesmo quando o preço está em reais. XRP a R$ 5,46 deixava de mostrar máxima "R$ 0,99".
+
+**Visual**
+- Cartões em vidro escuro (camada, borda fina, brilho, sombra curta) sem desfoque em cada cartão.
+- Barra inferior virou uma cápsula flutuante, acima da barra de gestos, com indicador da aba. As cinco rotas, o estado e o toque para voltar ao topo continuam os mesmos.
+
 ## 6.0.0 — 19/11/2026 (versão final)
 
 **Web Host — o portfólio no navegador do computador**

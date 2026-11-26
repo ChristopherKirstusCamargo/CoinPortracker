@@ -61,12 +61,13 @@ class EvmScanner(
             nativeIcon(net), net.nativePriceKey, HoldingKind.NATIVE, verified = true, coingeckoId = net.nativeCoingeckoId)
 
         val bs = bsTokensDef.await()
+        var tokensComplete = true
         if (bs is Outcome.Ok) {
             holdings += bs.value.filterNot { it.tokenKey == POL_NATIVE_TOKEN }; sources += "Blockscout"
         } else {
             when (val mc = multicallTokens(net, addr)) {
                 is Outcome.Ok -> { holdings += mc.value.filterNot { it.tokenKey == POL_NATIVE_TOKEN }; sources += "Multicall (lista pública de tokens)" }
-                is Outcome.Err -> warnings += "${net.label}: tokens não lidos agora (${mc.message})."
+                is Outcome.Err -> { warnings += "${net.label}: tokens não lidos agora (${mc.message})."; tokensComplete = false }
             }
         }
         val activity = if (withHistory) {
@@ -76,7 +77,7 @@ class EvmScanner(
                 is Outcome.Err -> { warnings += "${net.label}: histórico indisponível agora."; emptyList() }
             }
         } else emptyList()
-        Outcome.Ok(ScanResult(holdings, activity, warnings, sources))
+        Outcome.Ok(ScanResult(holdings, activity, warnings, sources, tokensComplete = tokensComplete))
     }
 
     private fun nativeIcon(net: Network) = when (net.nativeSymbol) {
