@@ -78,7 +78,7 @@ internal fun MarketRow(coin: MarketCoin, cur: com.coinportracker.domain.Currency
     BoxWithConstraints(Modifier.fillMaxWidth()) {
         val narrow = maxWidth < 360.dp
         val showSpark = maxWidth >= 340.dp
-        Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp).clip(RoundedCornerShape(14.dp)).clickable(onClick = onClick).padding(start = 8.dp, top = 8.dp, bottom = 8.dp),
+        Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp).clip(RoundedCornerShape(16.dp)).clickable(onClick = onClick).padding(start = 8.dp, top = 10.dp, bottom = 10.dp),
             verticalAlignment = Alignment.CenterVertically) {
             Text("${coin.rank ?: ""}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.width(22.dp), maxLines = 1, softWrap = false)
             TokenIcon(coin.image, coin.symbol, 32.dp)
@@ -177,9 +177,13 @@ fun MarketCoinScreen(vm: MainViewModel, nav: NavHostController, id: String) {
                 KeyValue("Volume 24h", Fmt.compact(coin.volume24h?.toBigDecimalOrNull(), cur))
                 coin.circulating?.toBigDecimalOrNull()?.let { KeyValue("Em circulação", Fmt.qty(it.setScale(0, java.math.RoundingMode.DOWN)) + " " + coin.symbol.uppercase()) }
                 coin.maxSupply?.toBigDecimalOrNull()?.let { KeyValue("Oferta máxima", Fmt.qty(it.setScale(0, java.math.RoundingMode.DOWN))) }
-                if (coin.sparkline.size >= 2) {
-                    KeyValue("Máxima 7d", Fmt.price(java.math.BigDecimal.valueOf(coin.sparkline.max()), cur))
-                    KeyValue("Mínima 7d", Fmt.price(java.math.BigDecimal.valueOf(coin.sparkline.min()), cur))
+                val hiLo = com.coinportracker.market.SparklineScale.extrema(coin.sparkline, cur, h.fx)
+                if (hiLo != null) {
+                    KeyValue("Máxima 7d", Fmt.price(hiLo.first, cur))
+                    KeyValue("Mínima 7d", Fmt.price(hiLo.second, cur))
+                } else if (coin.sparkline.size >= 2) {
+                    KeyValue("Máxima 7d", "—")
+                    KeyValue("Mínima 7d", "—")
                 }
             }
         }

@@ -1,6 +1,6 @@
 # CoinPortracker
 
-**Portfólio de criptomoedas privado e somente leitura, no seu Android.** Kotlin · Jetpack Compose · versão final **6.0.0**
+**Portfólio de criptomoedas privado e somente leitura, no seu Android.** Kotlin · Jetpack Compose · versão **6.1.0**
 
 > 🇺🇸 [English](#english)
 
@@ -13,7 +13,7 @@ O CoinPortracker nasceu para acompanhar todas as carteiras de cripto num só lug
 - **Direto da fonte:** saldos, histórico e staking vêm de endpoints públicos das blockchains, pela internet, em HTTPS.
 - **Visual próprio:** preto e branco, minimalista, com verde e vermelho só para alta e queda.
 
-O desenvolvimento começou em 12/11/2026. O app passou por 1.0 (livro contábil e P&L), 2.0, 3.0 (valor real reconstruído da blockchain), 4.0 (receber, vídeo, Dev), 5.0 (animações, Rolagem de banner) e chega aqui à **6.0.0, a versão final**: Web Host, Atividade refeita, backup completo e uma revisão geral.
+O desenvolvimento começou em 12/11/2026. O app passou por 1.0 (livro contábil e P&L), 2.0, 3.0 (valor real reconstruído da blockchain), 4.0 (receber, vídeo, Dev), 5.0 (animações, Rolagem de banner) e 6.0.0 (Web Host, Atividade, backup completo). A **6.1.0** separa saldo on-chain de cotação (leituras reais em 12–30 s no modo ao vivo, com aviso das redes que têm canal público), corrige a máxima/mínima de 7 dias em reais e adota o visual de vidro escuro com a navegação em cápsula flutuante.
 
 ## Funcionalidades
 
@@ -136,7 +136,7 @@ Os arquivos binários do projeto (fontes Inter, ícones, GIF padrão, modelos de
 
 ## English
 
-**CoinPortracker** is a private, **watch-only** crypto portfolio tracker for Android. It exists to follow every wallet in one place without handing keys or data to third parties, with a black-and-white minimalist design. You paste public addresses; the app reads balances, history and staking directly from public blockchain endpoints over HTTPS and keeps everything encrypted on the phone (SQLCipher + Android Keystore). No account, no ads, no telemetry, no backend. Version **6.0.0** is the final release.
+**CoinPortracker** is a private, **watch-only** crypto portfolio tracker for Android. It exists to follow every wallet in one place without handing keys or data to third parties, with a black-and-white minimalist design. You paste public addresses; the app reads balances, history and staking directly from public blockchain endpoints over HTTPS and keeps everything encrypted on the phone (SQLCipher + Android Keystore). No account, no ads, no telemetry, no backend. Version **6.1.0** keeps that model and shortens the wait for a real on-chain balance, without inventing prices.
 
 ### Features
 - Automatic multi-chain portfolio: Bitcoin, Solana, Ethereum, Base, Arbitrum, Optimism, Polygon, BNB Chain, Avalanche, Litecoin, Dogecoin, Tron, XRP, Cardano, TON, Stellar, Cosmos, Near, Sui and Aptos.

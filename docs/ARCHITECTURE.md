@@ -44,3 +44,12 @@ Carteira = nome + rede + endereço público. A sincronização grava saldos obse
 ## Desempenho
 Cálculos fora da main thread; listas com `key`; estado imutável; gráficos em `Canvas`; `preferredDisplayModeId` pede o modo de maior taxa
 (120/144 Hz) na resolução atual; R8 com otimização no release; shimmer em vez de spinners; pull-to-refresh com indicador próprio.
+
+## Atualização de saldo e de preço (6.1)
+Quantidade e cotação não compartilham o mesmo relógio.
+
+- **Quantidade** só muda com `ChainPortfolioRepository.syncAll` (leitura HTTP dos scanners) ou com um aviso que dispara essa mesma leitura. Falha de rede não avança `lastSyncAt` da carteira nem `SyncStatus.lastBalanceSync`, e uma leitura de tokens incompleta não apaga o saldo anterior (`HoldingMerge`).
+- **Cotação** é DefiLlama (lote, no máximo a cada 30 s no ciclo rápido) mais o último negócio da Kraken (HTTP e, no host oficial, WebSocket v2). O patrimônio é quantidade guardada × cotação; uma cotação nova não relê as carteiras.
+- **Ciclo** (`BalanceCadence`): ao vivo, 12–30 s conforme o número de carteiras e redes; 30 s ou 60 s se o usuário escolheu isso; desligado = só manual; baixo consumo = 5 min. Falha dobra a espera, com teto de 5 min.
+- **Eventos** (`ChainWatch`), só em primeiro plano e fora do baixo consumo: Solana `logsSubscribe`, Bitcoin `track-addresses` no mempool.space, Litecoin no litecoinspace.org, EVM `newHeads` (no máximo uma leitura daquela rede a cada 12 s), XRP `subscribe`, Stellar SSE da Horizon. O aviso não vira saldo — só acorda o scanner. Redes sem canal público nos provedores já usados continuam no polling.
+- A stake nativa de Solana (`getProgramAccounts`) não entra no ciclo rápido; a leitura completa (manual, ou a cada poucos minutos) é que a atualiza.

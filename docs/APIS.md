@@ -15,6 +15,24 @@ Todas as chamadas são HTTPS (cleartext bloqueado por `network_security_config`)
 
 Verificação em 12/11/2026 (BRT): todos os endpoints acima responderam; teste `BlockchainTest.liveProviders` passou contra BTC, SOL (incl. SPL) e ETH (incl. USDC ERC-20).
 
+## Tempo real (6.1)
+
+O aviso nunca é tratado como saldo. Ele só dispara a mesma leitura HTTP de sempre.
+
+| Rede | Canal | O que foi conferido |
+|---|---|---|
+| Solana | `logsSubscribe` em `wss://` no host do RPC (publicnode e `api.mainnet-beta.solana.com`) | o RPC público fala WebSocket; a notificação não traz o saldo novo |
+| Bitcoin | `wss://mempool.space/api/v1/ws` com `track-addresses` | protocolo do mempool (mensagem `multi-address-transactions`) |
+| Litecoin | `wss://litecoinspace.org/api/v1/ws` | mesmo protocolo (fork do mempool); se cair, fica o polling |
+| EVM | `eth_subscribe` `newHeads` no `wss://` do RPC | um bloco novo lê aquela rede no máximo a cada 12 s |
+| XRP | `subscribe` de contas em `wss://xrplcluster.com` (e o fallback já configurado) | transação validada acorda a leitura da conta |
+| Stellar | SSE `https://horizon.stellar.org/accounts/{id}/payments?cursor=now` | evento `data:` acorda a leitura |
+| Preço | `wss://ws.kraken.com/v2` ticker | só no host oficial; par fora de ±12% do último preço guardado é descartado |
+
+Dogecoin, Tron, Cardano, TON, Cosmos, Near, Sui e Aptos não têm, nos provedores já usados, um canal público de conta sem chave. Entram no polling (12–30 s ao vivo, 30/60 s no intervalo escolhido, 5 min em baixo consumo). Blockstream não tem o WebSocket de endereço do mempool; continua como fallback HTTP.
+
+A sparkline de 7 dias da CoinGecko (`sparkline_in_7d`) vem em USD mesmo com `vs_currency=brl`. Máxima e mínima são convertidas pelo câmbio USD/BRL antes de receber o símbolo R$.
+
 ## Robustez
 - `HttpClient`: um mutex por provedor, intervalo mínimo entre chamadas, backoff exponencial (2 s → 60 s, até 3 tentativas) em 429/5xx/timeout, honra `Retry-After`.
 - Contador mensal por provedor visível em Configurações › Dados de mercado.

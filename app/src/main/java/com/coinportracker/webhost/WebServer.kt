@@ -41,9 +41,12 @@ class WebServer(
     }
 
     fun stop() {
+        val thread = acceptThread
         runCatching { server?.close() }
         server = null
-        acceptThread?.interrupt(); acceptThread = null
+        thread?.interrupt()
+        runCatching { thread?.join(1_000) }
+        acceptThread = null
         pool.shutdownNow()
     }
 

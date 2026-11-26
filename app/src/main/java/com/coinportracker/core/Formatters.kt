@@ -125,10 +125,12 @@ object Fmt {
     fun day(d: LocalDate): String = d.format(dateFmt)
     fun shortDay(d: LocalDate): String = d.format(shortFmt)
 
-    fun ago(epochMs: Long?, now: Long = System.currentTimeMillis()): String {
+    fun ago(epochMs: Long?, now: Long = System.currentTimeMillis(), precise: Boolean = false): String {
         if (epochMs == null) return "nunca"
         val s = (now - epochMs) / 1000
         return when {
+            s < 5 -> "agora"
+            precise && s < 60 -> "há ${s}s"
             s < 60 -> "agora"
             s < 3600 -> "há ${s / 60} min"
             s < 86400 -> "há ${s / 3600} h"

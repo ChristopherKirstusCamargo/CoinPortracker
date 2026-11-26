@@ -13,7 +13,7 @@
 - **Números em rolo sem cortes**, revelação discreta dos cartões, paralaxe leve, fontes mais encorpadas, respeito a "Remover animações".
 - **Ocultar textos sobre o GIF** (desligado por padrão); data do gráfico dentro do cartão.
 - **Compartilhar portfólio**: cartão monocromático só com % (valores opcionais), fundo GIF animado/foto/sólido/degradê, compartilhar e salvar na galeria.
-- **Saldo ao vivo (suave)** opcional: preços reais a cada 15 s, passos de 1 s entre valores reais, pausa em segundo plano.
+- **Saldo ao vivo** opcional (6.1): cotações dos principais ativos em segundos (Kraken) e saldos on-chain em cerca de 12–30 s, ou na hora quando a rede avisa. O número na tela é o patrimônio calculado, sem passos inventados. Pausa em segundo plano.
 
 Limitações da v3: ver [PNL_METHOD.md](PNL_METHOD.md#5-limitações-conhecidas). Exportação em MP4 não foi feita (o GIF animado cobre o caso). Não houve teste em aparelho físico neste ambiente: validação por compilação, testes unitários/Robolectric e capturas geradas na JVM.
 

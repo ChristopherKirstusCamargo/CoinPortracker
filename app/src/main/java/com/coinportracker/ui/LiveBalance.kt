@@ -1,17 +1,16 @@
 package com.coinportracker.ui
 
-import androidx.compose.runtime.*
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LocalLifecycleOwner
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.first
+import androidx.compose.runtime.Composable
 
 /**
- * "Saldo ao vivo (suave)": entre dois valores REAIS buscados (a cada 5 s), o saldo exibido anda em
- * passos de 1 s do valor anterior até o novo. Nunca extrapola: cada passo fica entre o valor
- * exibido e o alvo real, então não há "pulos" inventados de R$ 10–20 — só a variação que aconteceu.
+ * O número na tela é sempre o último patrimônio calculado (quantidade confirmada × cotação).
+ * [step] e [path] existem só para a transição visual não ultrapassar os dois valores reais;
+ * a UI não os usa como saldo. A animação dos dígitos fica no SlotText.
  */
 object LiveBalance {
+    /** Valor que a Início pode mostrar: o alvo real, sem passos intermediários. */
+    fun displayed(target: Double): Double = target
+
     const val FETCH_EVERY_MS = RefreshScheduler.LIVE_EVERY_MS
     const val STEPS = 5
 
@@ -30,19 +29,9 @@ object LiveBalance {
     }
 }
 
-/** Valor exibido no Início: igual ao real com o modo desligado; suavizado (1 s) com ele ligado; pausa fora da tela. */
+/**
+ * Patrimônio exibido. [enabled] continua na assinatura (o modo ao vivo acelera as leituras reais);
+ * o valor em si não é interpolado — um número intermediário pareceria um saldo que a rede não devolveu.
+ */
 @Composable
-fun rememberLiveTotal(target: Double, enabled: Boolean): Double {
-    var shown by remember { mutableDoubleStateOf(target) }
-    if (!enabled) SideEffect { shown = target }
-    val lifecycle = LocalLifecycleOwner.current.lifecycle
-    LaunchedEffect(target, enabled) {
-        if (!enabled || shown == 0.0 || kotlin.math.abs(target - shown) > kotlin.math.abs(shown) * 0.02) { shown = target; return@LaunchedEffect }
-        for (left in LiveBalance.STEPS downTo 1) {
-            delay(1000)
-            lifecycle.currentStateFlow.first { it.isAtLeast(Lifecycle.State.RESUMED) }
-            shown = LiveBalance.step(shown, target, left)
-        }
-    }
-    return if (enabled) shown else target
-}
+fun rememberLiveTotal(target: Double, enabled: Boolean): Double = if (enabled) LiveBalance.displayed(target) else target

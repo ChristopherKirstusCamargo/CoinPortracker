@@ -11,8 +11,17 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Canvas
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.snap
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material.icons.filled.*
@@ -71,24 +80,62 @@ fun AppRoot(vm: MainViewModel) {
     }
 }
 
-/** Barra inferior minimalista: ícone preenchido + rótulo no item ativo, sem pílula colorida. */
+/**
+ * Cápsula flutuante. O Scaffold reserva a altura dela (e o inset de gestos), então a lista
+ * termina acima da pílula. O fundo é translúcido com borda fina — sem blur, para o rótulo continuar nítido.
+ */
 @Composable
 internal fun BottomBar(nav: NavHostController, route: String?) {
     val x = com.coinportracker.ui.theme.LocalExtra.current
-    Column(Modifier.background(MaterialTheme.colorScheme.background)) {
-        Box(Modifier.fillMaxWidth().height(1.dp).background(x.divider))
-        Row(Modifier.fillMaxWidth().navigationBarsPadding().height(64.dp), verticalAlignment = Alignment.CenterVertically) {
-            Tab.entries.forEach { t ->
-                val sel = route == t.route
-                val color = if (sel) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
-                Column(Modifier.weight(1f).fillMaxHeight().selectable(selected = sel, interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
-                    indication = ripple(bounded = false, radius = 36.dp), role = androidx.compose.ui.semantics.Role.Tab) {
-                    TabNav.switchTab(nav, t.route)
-                }, horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                    val sc by animateFloatAsState(if (sel) 1.08f else 1f, Motion.press(), label = "tab")
-                    Icon(if (sel) t.iconSel else t.icon, null, Modifier.size(23.dp).graphicsLayer { scaleX = sc; scaleY = sc }, tint = color)
-                    Spacer(Modifier.height(3.dp))
-                    com.coinportracker.ui.components.FitText(t.label, style = MaterialTheme.typography.labelSmall, color = color, minScale = 0.6f)
+    val reduced = com.coinportracker.ui.theme.LocalReducedMotion.current
+    val haptic = LocalHapticFeedback.current
+    val shape = RoundedCornerShape(32.dp)
+    val dark = x.isDark
+    Box(Modifier.fillMaxWidth().navigationBarsPadding().padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 8.dp)) {
+        Box(
+            Modifier.fillMaxWidth().height(64.dp)
+                .shadow(18.dp, shape, ambientColor = Color.Black.copy(alpha = 0.55f), spotColor = Color.Black.copy(alpha = 0.40f))
+                .clip(shape)
+                .background(if (dark) Color(0xE6121212) else x.card.copy(alpha = 0.94f))
+                .drawBehind {
+                    drawRect(Brush.verticalGradient(listOf(Color.White.copy(alpha = if (dark) 0.09f else 0.45f), Color.Transparent), endY = size.height * 0.5f))
+                }
+                .border(1.dp, if (dark) Color.White.copy(alpha = 0.14f) else x.cardBorder, shape),
+        ) {
+            val tabs = Tab.entries
+            val selected = tabs.indexOfFirst { it.route == route }.let { if (it < 0) 0 else it }
+            BoxWithConstraints(Modifier.fillMaxSize().padding(4.dp)) {
+                val tabW = maxWidth / tabs.size
+                val spec = if (reduced) snap<androidx.compose.ui.unit.Dp>() else Motion.spatial<androidx.compose.ui.unit.Dp>()
+                val offset by animateDpAsState(tabW * selected, spec, label = "pill")
+                Box(
+                    Modifier.offset(x = offset).width(tabW).fillMaxHeight()
+                        .clip(RoundedCornerShape(26.dp))
+                        .background(if (dark) Color.White.copy(alpha = 0.10f) else Color.Black.copy(alpha = 0.06f)),
+                )
+                Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
+                    tabs.forEach { t ->
+                        val sel = route == t.route
+                        val color = if (sel) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f)
+                        Column(
+                            Modifier.weight(1f).fillMaxHeight().selectable(
+                                selected = sel,
+                                interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+                                indication = ripple(bounded = false, radius = 28.dp),
+                                role = androidx.compose.ui.semantics.Role.Tab,
+                            ) {
+                                if (Motion.haptics) haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                TabNav.switchTab(nav, t.route)
+                            },
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center,
+                        ) {
+                            val sc by animateFloatAsState(if (sel) 1.06f else 1f, Motion.press(), label = "tab")
+                            Icon(if (sel) t.iconSel else t.icon, t.label, Modifier.size(22.dp).graphicsLayer { scaleX = sc; scaleY = sc }, tint = color)
+                            Spacer(Modifier.height(2.dp))
+                            com.coinportracker.ui.components.FitText(t.label, style = MaterialTheme.typography.labelSmall, color = color, minScale = 0.8f)
+                        }
+                    }
                 }
             }
         }

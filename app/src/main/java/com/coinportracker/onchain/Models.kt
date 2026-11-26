@@ -49,6 +49,10 @@ data class ScanResult(
     val activity: List<ChainActivity>,
     val warnings: List<String>,
     val sources: List<String>,
+    /** false = a lista de tokens não veio completa; o saldo anterior desses tokens fica. */
+    val tokensComplete: Boolean = true,
+    /** false = stake nativo não foi relido (atalho ou falha); as contas de stake anteriores ficam. */
+    val stakesComplete: Boolean = true,
 )
 
 /** Metadados de token de uma lista pública. */

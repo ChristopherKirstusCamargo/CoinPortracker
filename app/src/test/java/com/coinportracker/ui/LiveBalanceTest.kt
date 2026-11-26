@@ -36,6 +36,12 @@ class LiveBalanceTest {
     @Test fun noChangeMeansNoMovement() {
         assertTrue(LiveBalance.path(1234.56, 1234.56).all { it == 1234.56 })
     }
+
+    @Test fun screenShowsTheRealTotalNotAStep() {
+        assertEquals(50_003.0, LiveBalance.displayed(50_003.0), 0.0)
+        val steps = LiveBalance.path(50_000.0, 50_003.0)
+        assertTrue(steps.first() != LiveBalance.displayed(50_003.0))
+    }
 }
 
 class SlotParseTest {

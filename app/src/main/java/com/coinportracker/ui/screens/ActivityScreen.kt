@@ -92,17 +92,17 @@ fun ActivityScreen(vm: com.coinportracker.ui.UiModel, nav: NavHostController, in
                         item(key = "filters") {
                             Column {
                                 if (h.wallets.count { it.watch } > 1) {
-                                    androidx.compose.foundation.lazy.LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp), contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)) {
+                                    androidx.compose.foundation.lazy.LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp), contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)) {
                                         item { SortChip("Todas", walletFilter == null) { walletFilter = null } }
                                         items(h.wallets.filter { it.watch }, key = { it.id }) { w -> SortChip(w.name, walletFilter == w.id) { walletFilter = w.id } }
                                     }
                                 }
-                                androidx.compose.foundation.lazy.LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp), contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)) {
+                                androidx.compose.foundation.lazy.LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp), contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)) {
                                     item { SortChip("Todos os tipos", kindFilter == null) { kindFilter = null } }
                                     items(ActivityKind.entries.filter { it != ActivityKind.OTHER }, key = { it.name }) { k -> SortChip(k.label, kindFilter == k.name) { kindFilter = k.name } }
                                 }
                                 if (assetOptions.size > 1) {
-                                    androidx.compose.foundation.lazy.LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp), contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)) {
+                                    androidx.compose.foundation.lazy.LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp), contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)) {
                                         item { SortChip("Todos os ativos", assetFilter == null) { assetFilter = null } }
                                         items(assetOptions, key = { it }) { s -> SortChip(s, assetFilter == s) { assetFilter = s } }
                                     }
@@ -149,7 +149,7 @@ fun ActivityScreen(vm: com.coinportracker.ui.UiModel, nav: NavHostController, in
 @Composable
 private fun StakeSummaryRow(sv: com.coinportracker.data.StakeView, h: com.coinportracker.data.HubState, wallet: String?) {
     val x = LocalExtra.current
-    Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
         DirIcon(Icons.Outlined.Savings, Network.SOLANA)
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
@@ -204,7 +204,7 @@ private fun ChainRow(a: ChainActivityEntity, wallet: String?, value: String?, on
     }
     val amt = a.amount?.toBigDecimalOrNull()
     val x = LocalExtra.current
-    Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).clickable(onClick = onClick).padding(horizontal = 8.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).clickable(onClick = onClick).padding(horizontal = 12.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
         DirIcon(icon, n)
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
@@ -237,7 +237,7 @@ private fun ClassifiedRow(c: ClassifiedActivity, h: com.coinportracker.data.HubS
     val x = LocalExtra.current
     val amt = a.amount?.toBigDecimalOrNull()
     val value = a.priceKey?.let { unitPrice[it] }?.let { u -> amt?.let { q -> if (h.hide) Fmt.MASK else h.money(q.toDouble() * u) } }
-    Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).clickable(onClick = onClick).padding(horizontal = 8.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).clickable(onClick = onClick).padding(horizontal = 12.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
         DirIcon(icon, n)
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
@@ -286,7 +286,7 @@ private fun TxRowV2(t: TransactionEntity, sym: String, toSym: String?, wallets: 
     val q = t.quantity.toBigDecimalOrNull()
     val price = t.unitPrice?.toBigDecimalOrNull()
     val cur = runCatching { com.coinportracker.domain.Currency.valueOf(t.quoteCurrency) }.getOrDefault(com.coinportracker.domain.Currency.BRL)
-    Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).clickable(onClick = onClick).padding(horizontal = 8.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).clickable(onClick = onClick).padding(horizontal = 12.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
         DirIcon(icon, null)
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
