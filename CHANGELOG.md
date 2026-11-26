@@ -1,5 +1,18 @@
 # Changelog
 
+## 8.0.0 — 26/11/2026 (versão final)
+
+**Assinatura de uso único**
+- Esta é a versão final publicada, no lugar da 7.0.0. O APK foi assinado com uma chave nova, gerada só para esta build (RSA 4096, `CN=CoinPortracker Final, O=CoinPortracker, C=BR`). A chave e a senha foram destruídas depois da assinatura. Não existe cópia com o autor nem no repositório, então ninguém pode publicar outra atualização com a mesma identidade.
+- Qualquer APK com outro certificado não é este original. O SHA-256 do APK é `2f6c409817f8cf02597e809ebeec3358e6376cf1482bcf183222d0fdc44b3905`. O certificado (`CN=CoinPortracker Final, O=CoinPortracker, C=BR`) tem SHA-256 `bd60fd566b085c892816dba0a0fd0125a24f0da5e6133263386f23fc69abd6be` e SHA-1 `741e93d4868cacdf8e40b23c19973b960da07d34`. Os mesmos valores estão na release `v8.0.0`.
+- Quem já tem a 7.0.0 não consegue atualizar por cima: a assinatura é outra. Exporte o backup completo, desinstale a 7.0.0, instale a 8.0.0 e restaure o backup.
+
+**Posição total**
+- Em Ativos, tocar um ativo abre a posição inteira daquele ativo: saldo livre, stake nativo e o que estiver em outras carteiras, somados na mesma unidade. O detalhe continua em Preço e gráfico.
+- Abaixo do total, a divisão por carteira (livre e em stake) e o staking líquido. mSOL, jitoSOL, stETH e os demais só entram na quantidade do ativo-base quando o app já tem uma taxa de conversão verificável. Sem essa taxa, a linha aparece em "Fora do total", com o aviso, e não altera o número.
+- Nada é estimado. Saldo desatualizado, leitura parcial ou saldo mantido de uma leitura anterior leva a mesma marca que o restante do app.
+- Cartão para compartilhar, 1080×1350 (4:5): logo, quantidade em tipo grande e um nome em fonte de assinatura (Great Vibes, OFL, embutida). O valor em reais ou dólares fica desligado por padrão. O nome fica salvo nos ajustes e entra no backup. O cartão não leva endereço, carteira nem rede. Dá para enviar pelo compartilhamento do Android e salvar na galeria.
+
 ## 7.0.0 — 26/11/2026 (versão final)
 
 **Assinatura de uso único**

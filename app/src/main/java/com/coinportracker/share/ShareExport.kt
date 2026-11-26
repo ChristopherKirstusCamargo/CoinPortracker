@@ -17,8 +17,9 @@ import java.io.File
 object ShareExport {
     private fun dir(ctx: Context) = File(ctx.cacheDir, "share").apply { mkdirs(); listFiles()?.forEach { it.delete() } }
 
-    suspend fun png(ctx: Context, bmp: Bitmap): File = withContext(Dispatchers.IO) {
-        File(dir(ctx), "coinportracker-carteira.png").also { f -> f.outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) } }
+    suspend fun png(ctx: Context, bmp: Bitmap, fileName: String = "coinportracker-carteira.png"): File = withContext(Dispatchers.IO) {
+        val safe = fileName.substringAfterLast('/').substringAfterLast('\\').ifBlank { "coinportracker-carteira.png" }
+        File(dir(ctx), safe).also { f -> f.outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) } }
     }
 
     /** Decodifica um GIF (bytes) e devolve o quadro no instante [t] (ms). */
@@ -61,10 +62,10 @@ object ShareExport {
         f
     }
 
-    fun share(ctx: Context, f: File, mime: String) {
+    fun share(ctx: Context, f: File, mime: String, title: String = "Compartilhar carteira") {
         val uri = FileProvider.getUriForFile(ctx, ctx.packageName + ".share", f)
         val send = Intent(Intent.ACTION_SEND).setType(mime).putExtra(Intent.EXTRA_STREAM, uri).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        ctx.startActivity(Intent.createChooser(send, "Compartilhar carteira").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        ctx.startActivity(Intent.createChooser(send, title).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
     }
 
     /** Android 10+: salva em Imagens/CoinPortracker sem pedir permissão. Retorna false nas versões antigas (a tela usa "Salvar como"). */

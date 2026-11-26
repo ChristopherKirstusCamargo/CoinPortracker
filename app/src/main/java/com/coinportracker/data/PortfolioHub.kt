@@ -54,6 +54,8 @@ data class HubState(
     val stakes: List<StakeView> = emptyList(),
     /** Preço médio estimado automaticamente (grupo de custo → estimativa). */
     val estimates: Map<String, com.coinportracker.history.CostEstimate> = emptyMap(),
+    /** walletId|rede|token → horário em que aquele saldo foi gravado. A posição total marca o que ficou para trás. */
+    val holdingAsOf: Map<String, Long> = emptyMap(),
 ) {
     fun symbol(id: String) = symbols[id] ?: id.removePrefix("custom:").uppercase()
     val currency: Currency get() = settings.baseCurrency
@@ -138,6 +140,8 @@ class PortfolioHub(private val c: AppContainer, scope: CoroutineScope) {
                 walletNets[w.id]?.toList().orEmpty(), w.lastSyncAt, w.lastSyncError, w.id in watchIds)
         }.sortedWith(compareByDescending<WalletSummary> { it.watch }.thenByDescending { it.valueUsd })
 
-        return HubState(true, s, fx, agg, pnl, wallets, userCost, ledgerAsset, BigDecimal.ZERO, ps.assets.mapValues { it.value.symbol }, stakes, est)
+        val asOf = HashMap<String, Long>(i.holdings.size)
+        for (e in i.holdings) asOf[com.coinportracker.position.PositionAggregator.holdingAsOfKey(e.walletId, e.network, e.tokenKey)] = e.updatedAt
+        return HubState(true, s, fx, agg, pnl, wallets, userCost, ledgerAsset, BigDecimal.ZERO, ps.assets.mapValues { it.value.symbol }, stakes, est, asOf)
     }
 }

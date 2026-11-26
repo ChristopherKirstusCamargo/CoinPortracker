@@ -160,6 +160,8 @@ private fun AppNav(nav: NavHostController, vm: MainViewModel) {
                 composable(Tab.ACTIVITY.route) { ActivityScreen(vm, nav) }
                 composable(Tab.SETTINGS.route) { SettingsScreen(vm, nav) }
                 composable("asset2/{key}", listOf(navArgument("key") { type = NavType.StringType })) { Shared(this) { AssetDetailV2(vm, nav, it.arguments!!.getString("key")!!) } }
+                composable("position/{key}", listOf(navArgument("key") { type = NavType.StringType })) { Shared(this) { PositionScreen(vm, nav, it.arguments!!.getString("key")!!) } }
+                composable("positionShare/{key}", listOf(navArgument("key") { type = NavType.StringType })) { PositionShareScreen(vm, nav, it.arguments!!.getString("key")!!) }
                 composable("wallets2") { WalletsV2Screen(vm, nav) }
                 composable("addWallet") { AddWalletScreen(vm, nav) }
                 composable("banner") { BannerSettingsScreen(vm, nav) }

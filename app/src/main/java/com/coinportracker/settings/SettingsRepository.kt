@@ -81,6 +81,11 @@ data class AppSettings(
     val videoCleanNote: String = "",
     /** v6.0: Web Host (painel no navegador, só leitura, na rede local). O servidor nunca liga sozinho. */
     val web: WebHostPrefs = WebHostPrefs(),
+    /**
+     * Nome desenhado no cartão da posição total, como uma assinatura.
+     * Vazio por padrão. Nunca é um endereço: a leitura descarta o que parecer um.
+     */
+    val positionCardName: String = "",
 ) {
     val invested: java.math.BigDecimal? get() = investedTotal.toBigDecimalOrNull()?.takeIf { it.signum() > 0 }
     val goal: java.math.BigDecimal? get() = goalTarget.toBigDecimalOrNull()?.takeIf { it.signum() > 0 }
@@ -135,7 +140,7 @@ private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(na
 class SettingsRepository(private val context: Context) {
     private object K {
         val all = listOf("baseCurrency", "costMethod", "hideValues", "theme", "fgRefresh", "bgRefresh", "provider", "fallback", "cgKey",
-            "bio", "autoLock", "secure", "rf", "dashOrder", "dashHidden", "chartPeriod", "banner", "bannerH", "alerts", "stale", "onboarding", "hideSmall", "hiddenTokens", "bnOn", "bnOpacity", "bnScale", "bnX", "bnY", "bnBlur", "bnCorner", "bnFit", "bnSpeed", "bnFade", "bnHideText", "live", "estCost", "invTotal", "invCur", "invSince", "upscale", "goalTarget", "goalCur", "lowPower", "anNum", "anMs", "anCurve", "anScreen", "anScreenSpd", "anChart", "anChartSpd", "anList", "anHaptic", "anSpeed", "bnRoll", "bnRollOn", "bnRollGif", "bnRollPhoto", "bnRollVideo", "bnRollMig", "bnRollSel", "bnVidClean", "whPort", "whSessH", "whApprove", "whBindIp", "whIdle", "whTs", "whMdns")
+            "bio", "autoLock", "secure", "rf", "dashOrder", "dashHidden", "chartPeriod", "banner", "bannerH", "alerts", "stale", "onboarding", "hideSmall", "hiddenTokens", "bnOn", "bnOpacity", "bnScale", "bnX", "bnY", "bnBlur", "bnCorner", "bnFit", "bnSpeed", "bnFade", "bnHideText", "live", "estCost", "invTotal", "invCur", "invSince", "upscale", "goalTarget", "goalCur", "lowPower", "anNum", "anMs", "anCurve", "anScreen", "anScreenSpd", "anChart", "anChartSpd", "anList", "anHaptic", "anSpeed", "bnRoll", "bnRollOn", "bnRollGif", "bnRollPhoto", "bnRollVideo", "bnRollMig", "bnRollSel", "bnVidClean", "whPort", "whSessH", "whApprove", "whBindIp", "whIdle", "whTs", "whMdns", "posName")
     }
     private fun key(n: String) = stringPreferencesKey(n)
 
@@ -185,6 +190,7 @@ class SettingsRepository(private val context: Context) {
             "bnVidClean" to s.videoCleanNote,
             "whPort" to s.web.port.toString(), "whSessH" to s.web.sessionHours.toString(), "whApprove" to s.web.requireApproval.toString(),
             "whBindIp" to s.web.bindToIp.toString(), "whIdle" to s.web.autoStopMin.toString(), "whTs" to s.web.allowTailscale.toString(), "whMdns" to s.web.mdns.toString(),
+            "posName" to com.coinportracker.position.CardName.sanitize(s.positionCardName),
         )
 
         fun fromMap(m: Map<String, String>): AppSettings {
@@ -269,6 +275,7 @@ class SettingsRepository(private val context: Context) {
                     allowTailscale = e("whTs", w.allowTailscale) { it.toBooleanStrict() },
                     mdns = e("whMdns", w.mdns) { it.toBooleanStrict() },
                 ) },
+                positionCardName = com.coinportracker.position.CardName.sanitize(m["posName"] ?: ""),
             )
         }
     }

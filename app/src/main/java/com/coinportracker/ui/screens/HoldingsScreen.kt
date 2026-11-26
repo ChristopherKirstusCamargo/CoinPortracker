@@ -93,7 +93,7 @@ fun HoldingsScreen(vm: com.coinportracker.ui.UiModel, nav: NavHostController, pr
                         else if (rows.isEmpty()) item(key = "empty") { EmptyLine("Nenhum ativo ainda. Adicione uma carteira pela blockchain ou registre uma operação.") }
                         items(rows, key = { it.key }, contentType = { "asset" }) { a ->
                             val metric = if (sort == HoldSort.PNL || sort == HoldSort.PNL_PCT) RowMetric.PNL else RowMetric.CHANGE_24H
-                            Box(Modifier.animateItem(fadeInSpec = com.coinportracker.ui.theme.Motion.fade(), placementSpec = com.coinportracker.ui.theme.Motion.itemPlacement, fadeOutSpec = com.coinportracker.ui.theme.Motion.fade(150))) { AssetRow(h, a, h.pnl.assets[a.key], metric, { nav.navigate("asset2/${android.net.Uri.encode(a.key)}") }, spinFirst = false) }
+                            Box(Modifier.animateItem(fadeInSpec = com.coinportracker.ui.theme.Motion.fade(), placementSpec = com.coinportracker.ui.theme.Motion.itemPlacement, fadeOutSpec = com.coinportracker.ui.theme.Motion.fade(150))) { AssetRow(h, a, h.pnl.assets[a.key], metric, { nav.navigate("position/${android.net.Uri.encode(a.key)}") }, spinFirst = false) }
                         }
                     }
                     HoldView.NETWORKS -> {

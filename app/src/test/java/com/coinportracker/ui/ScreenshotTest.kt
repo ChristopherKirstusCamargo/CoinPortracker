@@ -186,6 +186,7 @@ class ScreenshotTest {
     @Test fun homeLight() = shoot("02_inicio_tema_claro", ThemeMode.LIGHT, tab = "home") { vm, nav -> HomeScreen(vm, nav) }
     @Test fun holdings() = shoot("03_ativos_lista", tab = "assets") { vm, nav -> HoldingsScreen(vm, nav) }
     @Test fun asset() = shoot("04_ativo_detalhe_pnl") { vm, nav -> AssetDetailV2(vm, nav, "cg:ethereum") }
+    @Test fun positionTotal() = shoot("80_posicao_total") { vm, nav -> PositionScreen(vm, nav, "cg:solana") }
     @Test fun analysis() = shoot("06_analise_pnl_alocacao", tab = "analysis") { vm, nav -> AnalysisScreen(vm, nav) }
     @Test fun activity() = shoot("07_atividade_onchain", tab = "activity") { vm, nav -> ActivityScreen(vm, nav) }
     @Test fun wallets() = shoot("09_carteiras") { vm, nav -> WalletsV2Screen(vm, nav) }

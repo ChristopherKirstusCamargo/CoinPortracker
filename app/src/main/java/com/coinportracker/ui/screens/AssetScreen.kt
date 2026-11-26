@@ -114,6 +114,8 @@ fun AssetDetailV2(vm: com.coinportracker.ui.UiModel, nav: NavHostController, key
                     Text("Preço médio indisponível para este ativo.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 r?.estimate?.let { e -> EstimateNote(h, e, r.source == CostSource.ESTIMATED) }
+                Spacer(Modifier.height(4.dp))
+                TextButton(onClick = { nav.navigate("position/${android.net.Uri.encode(key)}") }, Modifier.fillMaxWidth()) { Text("Ver posição total") }
             }
         }
         item(key = "partsTitle") { SectionTitle("Onde está", Modifier.padding(horizontal = 20.dp)) }

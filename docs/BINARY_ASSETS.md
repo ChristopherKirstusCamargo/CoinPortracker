@@ -17,6 +17,7 @@ Estes arquivos fazem parte do código-fonte e são necessários para compilar. T
 | `app/src/main/assets/tokenlists/optimistic-ethereum.json.gz` | 49836 | `91802f341d4705fcefc8ab16c4f9713bd5d4713b9c4ae3a4e512b79f1ad88a5b` |
 | `app/src/main/assets/tokenlists/polygon-pos.json.gz` | 44998 | `ea835dfba5604ceab080684dbfa770cbb89ce631ad3dd3c00c2334fb5aed9510` |
 | `app/src/main/res/drawable-nodpi/splash_mark.png` | 14122 | `facd66093f19536b710b727e340bc6471a9712248362e5f31a8ad9e678519fa2` |
+| `app/src/main/res/font/great_vibes.ttf` | 457588 | `8d509802186f1b51572531ecf313e8098f9a5bfdfaca93f0c9b34467f9982d15` |
 | `app/src/main/res/font/inter_bold.ttf` | 73356 | `36df29ba0ae852737f6c39620e6249c3395b831facde2477b84f75a74015ae02` |
 | `app/src/main/res/font/inter_display_semibold.ttf` | 73392 | `e2f20e54ce4c07188faf8ae35ca11c41413406deb595a109d0865e916e453760` |
 | `app/src/main/res/font/inter_medium.ttf` | 72688 | `1ab0c9bb0cd6cd99cc33839ce0e54ad1960870b2aaca0c2f0182ce8b3a664790` |
@@ -46,6 +47,7 @@ Estes arquivos fazem parte do código-fonte e são necessários para compilar. T
 
 Origem:
 - Fontes Inter: SIL Open Font License ([licenses/Inter-OFL.txt](licenses/Inter-OFL.txt)).
+- Fonte de assinatura Great Vibes (OFL, [licenses/GreatVibes-OFL.txt](licenses/GreatVibes-OFL.txt)): usada só no cartão da posição total.
 - Modelos de super-resolução (`sr/*.tflite`, licença em `app/src/main/assets/sr/LICENSE.txt`): convertidos com os scripts de `tools/`, ver [SUPER_RESOLUTION.md](SUPER_RESOLUTION.md).
 - Listas de tokens (`tokenlists/*.json.gz`): listas públicas embutidas para uso offline.
 - `gradle-wrapper.jar`: Gradle Wrapper oficial.
