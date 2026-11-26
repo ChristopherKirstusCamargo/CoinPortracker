@@ -1,6 +1,6 @@
 # CoinPortracker
 
-**Portfólio de criptomoedas privado e somente leitura, no seu Android.** Kotlin · Jetpack Compose · versão **6.1.0**
+**Portfólio de criptomoedas privado e somente leitura, no seu Android.** Kotlin · Jetpack Compose · versão final **7.0.0**
 
 > 🇺🇸 [English](#english)
 
@@ -13,7 +13,7 @@ O CoinPortracker nasceu para acompanhar todas as carteiras de cripto num só lug
 - **Direto da fonte:** saldos, histórico e staking vêm de endpoints públicos das blockchains, pela internet, em HTTPS.
 - **Visual próprio:** preto e branco, minimalista, com verde e vermelho só para alta e queda.
 
-O desenvolvimento começou em 12/11/2026. O app passou por 1.0 (livro contábil e P&L), 2.0, 3.0 (valor real reconstruído da blockchain), 4.0 (receber, vídeo, Dev), 5.0 (animações, Rolagem de banner) e 6.0.0 (Web Host, Atividade, backup completo). A **6.1.0** separa saldo on-chain de cotação (leituras reais em 12–30 s no modo ao vivo, com aviso das redes que têm canal público), corrige a máxima/mínima de 7 dias em reais e adota o visual de vidro escuro com a navegação em cápsula flutuante.
+O desenvolvimento começou em 12/11/2026. O app passou por 1.0 (livro contábil e P&L), 2.0, 3.0 (valor real reconstruído da blockchain), 4.0 (receber, vídeo, Dev), 5.0 (animações, Rolagem de banner) e 6.0.0 (Web Host, Atividade, backup completo). A **7.0.0** é a versão final: separa saldo on-chain de cotação (leituras reais em 12–30 s no modo ao vivo, com aviso das redes que têm canal público), corrige a máxima/mínima de 7 dias em reais e adota o visual de vidro escuro com a navegação em cápsula flutuante. O APK oficial foi assinado com uma chave de uso único, destruída depois da assinatura. Não há como publicar uma atualização com a mesma identidade. Quem instalou a 6.0.0 precisa exportar o backup, desinstalar e instalar a 7.0.0 — a assinatura diferente impede atualizar por cima.
 
 ## Funcionalidades
 
@@ -36,15 +36,26 @@ O desenvolvimento começou em 12/11/2026. O app passou por 1.0 (livro contábil 
 
 ## Instalar pelo APK
 
-1. No celular Android (**8.0 ou mais novo**), baixe o APK da [versão mais recente](../../releases/latest) (arquivo `CoinPortracker.apk`) ou direto do repositório: [`release/CoinPortracker.apk`](release/CoinPortracker.apk?raw=true).
-2. **Confira a integridade.** O SHA-256 do arquivo precisa ser igual ao de [`release/CoinPortracker.apk.sha256`](release/CoinPortracker.apk.sha256):
+A 7.0.0 é a versão final. O APK da release foi assinado com uma chave criada só para essa build e destruída em seguida. O certificado público (SHA-256 e SHA-1) está na [release v7.0.0](../../releases/tag/v7.0.0). Um APK com outro certificado não é o original, e ninguém pode emitir uma atualização com essa mesma assinatura.
+
+**Quem já usa a 6.0.0:** a assinatura mudou, então o Android não atualiza por cima. Faça assim:
+
+1. Em **Ajustes › Segurança e privacidade**, exporte o **backup completo criptografado** e guarde o arquivo e a senha.
+2. Desinstale o CoinPortracker 6.0.0.
+3. Instale a 7.0.0 como abaixo.
+4. Restaure o backup. A restauração acrescenta o que falta e não apaga o que já estiver no aparelho.
+
+**Instalação limpa** (Android **8.0** ou mais novo):
+
+1. Baixe `CoinPortracker.apk` da [release v7.0.0](../../releases/tag/v7.0.0).
+2. **Confira a integridade.** O SHA-256 do arquivo precisa ser o publicado nessa release e em [`release/CoinPortracker.apk.sha256`](release/CoinPortracker.apk.sha256):
    - Linux: `sha256sum CoinPortracker.apk`
    - macOS: `shasum -a 256 CoinPortracker.apk`
    - Windows (PowerShell): `Get-FileHash CoinPortracker.apk -Algorithm SHA256`
    - No próprio celular: qualquer app de hash de arquivos.
-3. Abra o APK. Se o Android pedir, permita **"Instalar apps desconhecidos"** para o navegador ou o gerenciador de arquivos.
-4. Toque em **Instalar**. Uma versão anterior assinada com a mesma chave é atualizada por cima e mantém os dados.
-5. Abra o CoinPortracker.
+3. Confira também o certificado com `apksigner verify --print-certs` (ou um verificador de APK). Os fingerprints têm de ser os da release.
+4. Abra o APK. Se o Android pedir, permita **"Instalar apps desconhecidos"** para o navegador ou o gerenciador de arquivos.
+5. Toque em **Instalar** e abra o CoinPortracker.
 
 ## Como usar
 
@@ -120,7 +131,7 @@ echo "sdk.dir=/caminho/para/android-sdk" > local.properties
 
 Testes opcionais: `-Plive=true` (consultas reais às redes) e `-Pshots=true` (capturas de tela geradas na JVM).
 
-Para assinar o release, crie `keystore.properties` na raiz com `storeFile`, `storePassword`, `keyAlias` e `keyPassword`. Sem ele, o release sai assinado com a chave de debug. Keystores e senhas nunca vão para o repositório (`.gitignore`).
+O APK oficial da 7.0.0 foi assinado fora do repositório, com uma chave de uso único que não foi commitada e foi destruída depois. O `signingConfig` do projeto continua lendo `keystore.properties` na raiz (`storeFile`, `storePassword`, `keyAlias`, `keyPassword`) só se o arquivo existir na máquina de quem compila. Sem ele, um release local sai com a chave de debug e **não** é o APK oficial. Keystores e senhas estão no `.gitignore` e não entram no histórico.
 
 Os arquivos binários do projeto (fontes Inter, ícones, GIF padrão, modelos de super-resolução, listas de tokens e o `gradle-wrapper.jar`) estão no repositório; tamanhos e SHA-256 de cada um ficam em [docs/BINARY_ASSETS.md](docs/BINARY_ASSETS.md).
 
@@ -136,7 +147,7 @@ Os arquivos binários do projeto (fontes Inter, ícones, GIF padrão, modelos de
 
 ## English
 
-**CoinPortracker** is a private, **watch-only** crypto portfolio tracker for Android. It exists to follow every wallet in one place without handing keys or data to third parties, with a black-and-white minimalist design. You paste public addresses; the app reads balances, history and staking directly from public blockchain endpoints over HTTPS and keeps everything encrypted on the phone (SQLCipher + Android Keystore). No account, no ads, no telemetry, no backend. Version **6.1.0** keeps that model and shortens the wait for a real on-chain balance, without inventing prices.
+**CoinPortracker** is a private, **watch-only** crypto portfolio tracker for Android. It exists to follow every wallet in one place without handing keys or data to third parties, with a black-and-white minimalist design. You paste public addresses; the app reads balances, history and staking directly from public blockchain endpoints over HTTPS and keeps everything encrypted on the phone (SQLCipher + Android Keystore). No account, no ads, no telemetry, no backend. Version **7.0.0** is the final release. It separates confirmed on-chain balances from market quotes and ships the dark-glass UI. The official APK was signed with a one-time key that was destroyed after signing, so no later build can carry the same signature. Anyone on 6.0.0 must export a full backup, uninstall, install 7.0.0 and restore: Android will not upgrade across the signature change.
 
 ### Features
 - Automatic multi-chain portfolio: Bitcoin, Solana, Ethereum, Base, Arbitrum, Optimism, Polygon, BNB Chain, Avalanche, Litecoin, Dogecoin, Tron, XRP, Cardano, TON, Stellar, Cosmos, Near, Sui and Aptos.
@@ -150,12 +161,11 @@ Os arquivos binários do projeto (fontes Inter, ícones, GIF padrão, modelos de
 - **Full encrypted backup** with non-destructive restore.
 
 ### Install
-1. On an Android 8.0+ phone, download `CoinPortracker.apk` from the [latest release](../../releases/latest) or straight from the repository: [`release/CoinPortracker.apk`](release/CoinPortracker.apk?raw=true).
-2. Verify its SHA-256 against [`release/CoinPortracker.apk.sha256`](release/CoinPortracker.apk.sha256):
-   - Linux: `sha256sum`
-   - macOS: `shasum -a 256`
-   - Windows: `Get-FileHash -Algorithm SHA256`
-3. Allow "Install unknown apps" if asked, then install.
+1. On Android 8.0+, download `CoinPortracker.apk` from the [v7.0.0 release](../../releases/tag/v7.0.0).
+2. Check the file SHA-256 against the release notes and [`release/CoinPortracker.apk.sha256`](release/CoinPortracker.apk.sha256).
+3. Check the signing certificate fingerprints (SHA-256 and SHA-1) against the same release. A different certificate is not this build.
+4. If you already have 6.0.0: export the encrypted full backup, uninstall, install 7.0.0, then restore.
+5. Allow "Install unknown apps" if asked, then install.
 
 ### Web Host
 1. Go to **Settings › Web Host › Ligar o painel**.
@@ -181,4 +191,4 @@ JDK 17 + Android SDK 35, then:
 ./gradlew assembleRelease
 ```
 
-Release signing reads `keystore.properties` (never committed). Licensed under [Apache-2.0](LICENSE).
+The official 7.0.0 APK was signed with a one-time key that was destroyed and was never committed. A local `assembleRelease` without `keystore.properties` is debug-signed and is not the official APK. Licensed under [Apache-2.0](LICENSE).

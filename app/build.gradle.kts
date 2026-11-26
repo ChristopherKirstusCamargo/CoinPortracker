@@ -17,8 +17,8 @@ android {
         applicationId = "com.coinportracker"
         minSdk = 26
         targetSdk = 35
-        versionCode = 18
-        versionName = "6.1.0"
+        versionCode = 19
+        versionName = "7.0.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }
     }

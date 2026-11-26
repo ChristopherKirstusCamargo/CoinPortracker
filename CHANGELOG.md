@@ -1,6 +1,11 @@
 # Changelog
 
-## 6.1.0 — 26/11/2026
+## 7.0.0 — 26/11/2026 (versão final)
+
+**Assinatura de uso único**
+- Esta é a versão final publicada. O APK foi assinado com uma chave nova, gerada só para esta build (RSA 4096, `CN=CoinPortracker Final`). A chave e a senha foram destruídas depois da assinatura. Não existe cópia com o autor nem no repositório, então ninguém pode publicar outra atualização com a mesma identidade.
+- Qualquer APK com outro certificado não é este original. O SHA-256 do arquivo e os fingerprints SHA-256 e SHA-1 do certificado estão na release `v7.0.0`.
+- Quem já tem a 6.0.0 não consegue atualizar por cima: a assinatura é outra. Exporte o backup completo, desinstale a 6.0.0, instale a 7.0.0 e restaure o backup.
 
 **Saldos e cotações deixam de dividir o mesmo relógio**
 - O ciclo automático não espera mais 5 minutos para reler a blockchain. No modo ao vivo a quantidade confirmada é consultada a cada 12–30 s (conforme carteiras e redes); nos intervalos de 30 s e 60 s, a cada ciclo escolhido; em baixo consumo, a cada 5 min. A cotação continua mais frequente e recalcula o patrimônio sem reler as carteiras.
@@ -16,7 +21,7 @@
 - Cartões em vidro escuro (camada, borda fina, brilho, sombra curta) sem desfoque em cada cartão.
 - Barra inferior virou uma cápsula flutuante, acima da barra de gestos, com indicador da aba. As cinco rotas, o estado e o toque para voltar ao topo continuam os mesmos.
 
-## 6.0.0 — 19/11/2026 (versão final)
+## 6.0.0 — 19/11/2026
 
 **Web Host — o portfólio no navegador do computador**
 - Novo em Ajustes › Web Host: liga um painel somente leitura na rede Wi-Fi local, servido pelo próprio celular (sem nuvem, sem túnel, sem serviço pago).
