@@ -1,9 +1,12 @@
 package com.coinportracker.ui.screens
 
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Movie
 import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.Image
@@ -35,8 +38,10 @@ import androidx.navigation.NavHostController
 import coil.imageLoader
 import coil.request.ImageRequest
 import coil.request.SuccessResult
+import com.coinportracker.core.BoundedRead
 import com.coinportracker.core.Decimals
 import com.coinportracker.core.Fmt
+import com.coinportracker.media.GifDecoder
 import com.coinportracker.data.HubState
 import com.coinportracker.position.*
 import com.coinportracker.share.ShareExport
@@ -47,6 +52,8 @@ import com.coinportracker.ui.theme.reveal
 import com.coinportracker.ui.theme.sharedKey
 import com.coinportracker.ui.theme.staggeredEntrance
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -58,8 +65,9 @@ internal fun positionOf(h: HubState, anchor: String, now: Long = System.currentT
     return PositionAggregator.build(anchor, h.agg.assets, h.agg.hidden, clocks, h.holdingAsOf, now, staleMs)
 }
 
+/** Manchete da posição: no máximo 1 casa, truncada para baixo. O valor exato fica numa linha menor. */
 private fun amountLine(qty: BigDecimal, symbol: String, hide: Boolean): String =
-    if (hide) "${Fmt.MASK} $symbol" else "${Fmt.qty(qty)} $symbol"
+    if (hide) "${Fmt.MASK} $symbol" else HeadlineQty.text(qty, symbol)
 
 @Composable
 fun PositionScreen(vm: com.coinportracker.ui.UiModel, nav: NavHostController, anchor: String) {
@@ -93,11 +101,19 @@ fun PositionScreen(vm: com.coinportracker.ui.UiModel, nav: NavHostController, an
                         Text(pos.name, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                 }
-                Spacer(Modifier.height(22.dp))
+                Spacer(Modifier.height(28.dp))
                 Text("Total", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Spacer(Modifier.height(4.dp))
-                SlotText(amountLine(pos.total, pos.symbol, h.hide), MaterialTheme.typography.displaySmall, spinOnFirst = 1, staggerMs = 18, durationMs = 720)
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(2.dp))
+                Row(verticalAlignment = Alignment.Bottom) {
+                    SlotText(if (h.hide) Fmt.MASK else HeadlineQty.number(pos.total), MaterialTheme.typography.displayLarge, spinOnFirst = 1, staggerMs = 16, durationMs = 640)
+                    Spacer(Modifier.width(8.dp))
+                    Text(pos.symbol, style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 6.dp))
+                }
+                if (!h.hide) {
+                    Spacer(Modifier.height(4.dp))
+                    Text("Exato ${Fmt.qty(pos.total)} ${pos.symbol}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                Spacer(Modifier.height(10.dp))
                 val fiat = when {
                     pos.valueUsd == null -> "Sem cotação"
                     pos.valueIncomplete -> h.money(pos.valueUsd) + " · cotação incompleta"
@@ -220,7 +236,7 @@ private fun cardModel(h: HubState, p: PositionTotal, showFiat: Boolean, signatur
         else -> null
     }
     val fiat = if (!showFiat || p.valueUsd == null) null else Fmt.money(h.conv(p.valueUsd), h.currency, false)
-    return PositionCardModel(p.symbol, p.name, "${Fmt.qty(p.total)} ${p.symbol}", fiat, signature, status)
+    return PositionCardModel(p.symbol, p.name, HeadlineQty.number(p.total), fiat, signature, status)
 }
 
 @Composable
@@ -252,13 +268,51 @@ fun PositionShareScreen(vm: com.coinportracker.ui.UiModel, nav: NavHostControlle
         }?.bitmap
         logo = bmp
     }
-    val model = remember(pos, showFiat, signature, h.currency, h.fx, h.hide) { cardModel(h, pos, showFiat, signature) }
+    var artStill by remember { mutableStateOf<Bitmap?>(null) }
+    var artMovie by remember { mutableStateOf<Movie?>(null) }
+    val model = remember(pos, showFiat, signature, h.currency, h.fx) { cardModel(h, pos, showFiat, signature) }
     var preview by remember { mutableStateOf<Bitmap?>(null) }
-    LaunchedEffect(model, logo) {
-        preview = withContext(Dispatchers.Default) { renderer.render(model, logo) }
+    var busy by remember { mutableStateOf(false) }
+    LaunchedEffect(model, logo, artStill, artMovie, reduced) {
+        val movie = artMovie
+        if (movie == null || reduced) {
+            val frame = movie?.let { PositionGif.scaledFrame(it, 0) }
+            preview = withContext(Dispatchers.Default) { renderer.render(model, logo, frame ?: artStill) }
+            frame?.recycle()
+            return@LaunchedEffect
+        }
+        val dur = movie.duration().coerceAtLeast(PositionGif.STEP_MS)
+        var t = 0
+        while (isActive) {
+            val frame = PositionGif.scaledFrame(movie, t)
+            val card = withContext(Dispatchers.Default) { renderer.render(model, logo, frame, 540, 540) }
+            frame.recycle()
+            preview = card
+            delay(PositionGif.STEP_MS.toLong())
+            t = (t + PositionGif.STEP_MS) % dur
+        }
     }
+    fun loadArt(uri: Uri) = scope.launch {
+        val loaded = withContext(Dispatchers.IO) {
+            runCatching {
+                val bytes = ctx.contentResolver.openInputStream(uri)!!.use { BoundedRead.bytes(it, BoundedRead.MEDIA) }
+                if (GifDecoder.isGif(bytes)) {
+                    val movie = ShareExport.movieOf(bytes) ?: error("gif")
+                    ArtPick.Gif(movie)
+                } else ArtPick.Still(decodeStill(bytes))
+            }
+        }
+        loaded.onSuccess {
+            when (it) {
+                is ArtPick.Gif -> { artMovie = it.movie; artStill = null }
+                is ArtPick.Still -> { artStill = it.bitmap; artMovie = null }
+            }
+        }.onFailure { vm.toast(if (it is com.coinportracker.core.TooLargeException) "Esse arquivo é grande demais (máx. 40 MB)." else "Não foi possível abrir essa imagem.") }
+    }
+    val pick = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri -> if (uri != null) loadArt(uri) }
+    val pickFile = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> if (uri != null) loadArt(uri) }
     var lastFile by remember { mutableStateOf<File?>(null) }
-    val saveAs = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("image/png")) { uri ->
+    val saveAs = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("image/*")) { uri ->
         val f = lastFile
         if (uri != null && f != null) scope.launch(Dispatchers.IO) {
             val ok = runCatching { ctx.contentResolver.openOutputStream(uri, "wt")?.use { out -> f.inputStream().use { it.copyTo(out) } } }.isSuccess
@@ -266,33 +320,50 @@ fun PositionShareScreen(vm: com.coinportracker.ui.UiModel, nav: NavHostControlle
         }
     }
     fun export(save: Boolean) = scope.launch {
-        val b = preview ?: return@launch
+        busy = true
         runCatching {
-            val f = ShareExport.png(ctx, b, "coinportracker-posicao.png")
+            val movie = artMovie
+            val (f, mime) = if (movie != null) {
+                val file = File(ctx.cacheDir, "share").apply { mkdirs() }.let { dir -> File(dir, "coinportracker-posicao.gif") }
+                withContext(Dispatchers.Default) { PositionGif.writeCard(file, renderer, model, logo, movie) }
+                file to "image/gif"
+            } else {
+                val b = withContext(Dispatchers.Default) { renderer.render(model, logo, artStill) }
+                ShareExport.png(ctx, b, "coinportracker-posicao.png") to "image/png"
+            }
             lastFile = f
-            if (!save) ShareExport.share(ctx, f, "image/png", "Compartilhar posição")
-            else if (ShareExport.saveToGallery(ctx, f, "image/png")) vm.toast("Salvo em Imagens › CoinPortracker.")
+            if (!save) ShareExport.share(ctx, f, mime, "Compartilhar posição")
+            else if (ShareExport.saveToGallery(ctx, f, mime)) vm.toast(if (mime == "image/gif") "GIF salvo em Imagens › CoinPortracker." else "Salvo em Imagens › CoinPortracker.")
             else saveAs.launch(f.name)
         }.onFailure { vm.toast("Não foi possível gerar o cartão.") }
+        busy = false
     }
 
     Column(Modifier.fillMaxSize().navigationBarsPadding()) {
         V2TopBar("Cartão", { nav.popBackStack() })
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)) {
             Spacer(Modifier.height(4.dp))
-            val frame = Modifier.fillMaxWidth().aspectRatio(4f / 5f).clip(RoundedCornerShape(22.dp))
+            val frame = Modifier.fillMaxWidth().aspectRatio(1f).clip(RoundedCornerShape(28.dp))
             val shown = preview
-            if (shown == null) {
-                ShimmerBlock(frame, 22.dp)
-            } else if (reduced) {
-                Image(shown.asImageBitmap(), "Prévia do cartão", frame, contentScale = ContentScale.Fit)
-            } else {
-                Crossfade(shown, label = "card") { bmp ->
-                    Image(bmp.asImageBitmap(), "Prévia do cartão", frame, contentScale = ContentScale.Fit)
-                }
-            }
+            if (shown == null) ShimmerBlock(frame, 28.dp)
+            else Image(shown.asImageBitmap(), "Prévia do cartão", frame, contentScale = ContentScale.Fit)
             Spacer(Modifier.height(16.dp))
             CpCard {
+                Text("Fundo", style = MaterialTheme.typography.titleSmall)
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    if (artMovie != null) "GIF animado. O arquivo compartilhado também anima."
+                    else if (artStill != null) "Imagem parada."
+                    else "Escolha uma imagem ou um GIF do aparelho. Sem fundo, o cartão fica no vidro escuro.",
+                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(Modifier.height(8.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    TextButton(onClick = { pick.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }) { Text("Galeria") }
+                    TextButton(onClick = { pickFile.launch(arrayOf("image/gif", "image/png", "image/jpeg", "image/webp")) }) { Text("Arquivos") }
+                    if (artStill != null || artMovie != null) TextButton(onClick = { artStill = null; artMovie = null }) { Text("Tirar") }
+                }
+                Spacer(Modifier.height(14.dp))
                 Text("Nome no cartão", style = MaterialTheme.typography.titleSmall)
                 Spacer(Modifier.height(4.dp))
                 Text("Aparece como assinatura. Fica neste aparelho.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -332,13 +403,27 @@ fun PositionShareScreen(vm: com.coinportracker.ui.UiModel, nav: NavHostControlle
         }
         Surface(color = MaterialTheme.colorScheme.background) {
             Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                Button(enabled = preview != null, onClick = { export(false) }, modifier = Modifier.weight(1f).heightIn(min = 52.dp), shape = RoundedCornerShape(14.dp), colors = cpButtonColors()) {
+                Button(enabled = preview != null && !busy, onClick = { export(false) }, modifier = Modifier.weight(1f).heightIn(min = 52.dp), shape = RoundedCornerShape(14.dp), colors = cpButtonColors()) {
                     Icon(Icons.Outlined.Share, null, Modifier.size(18.dp)); Spacer(Modifier.width(8.dp)); Text("Compartilhar")
                 }
-                OutlinedButton(enabled = preview != null, onClick = { export(true) }, modifier = Modifier.weight(1f).heightIn(min = 52.dp), shape = RoundedCornerShape(14.dp)) {
+                OutlinedButton(enabled = preview != null && !busy, onClick = { export(true) }, modifier = Modifier.weight(1f).heightIn(min = 52.dp), shape = RoundedCornerShape(14.dp)) {
                     Icon(Icons.Outlined.Download, null, Modifier.size(18.dp)); Spacer(Modifier.width(8.dp)); Text("Salvar")
                 }
             }
         }
     }
+}
+
+private sealed interface ArtPick {
+    class Gif(val movie: Movie) : ArtPick
+    class Still(val bitmap: Bitmap) : ArtPick
+}
+
+private fun decodeStill(bytes: ByteArray): Bitmap {
+    val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+    BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
+    var sample = 1
+    while (bounds.outWidth / sample > 1600 || bounds.outHeight / sample > 1600) sample *= 2
+    return BitmapFactory.decodeByteArray(bytes, 0, bytes.size, BitmapFactory.Options().apply { inSampleSize = sample })
+        ?: error("imagem")
 }

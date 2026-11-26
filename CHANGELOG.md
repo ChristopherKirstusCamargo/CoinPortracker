@@ -1,5 +1,17 @@
 # Changelog
 
+## 9.0.0 — 26/11/2026 (versão final)
+
+**Assinatura de uso único**
+- Esta é a versão final publicada, no lugar da 8.0.0. O APK foi assinado com uma chave nova, gerada só para esta build (RSA 4096, `CN=CoinPortracker Final, O=CoinPortracker, C=BR`). A chave e a senha foram destruídas depois da assinatura. Não existe cópia.
+- O SHA-256 do APK é `4d3b254985292cfcb6bdfcd22b475c0b40734c4b9522fb5ea896f62e2cbad5b8`. O certificado (`CN=CoinPortracker Final, O=CoinPortracker, C=BR`) tem SHA-256 `885b71f1152f3a56d1fa6df30f7a090a7f14147542f175162b64097de5ef0f94` e SHA-1 `64d457b0dced45f25a5ffb47394cc1bafcbdc993`. Os mesmos valores estão na release `v9.0.0`.
+- Quem já tem a 8.0.0 não consegue atualizar por cima: a assinatura é outra. Exporte o backup completo, desinstale, instale a 9.0.0 e restaure.
+
+**Cartão e posição, refeitos**
+- O cartão passou a ser quadrado (1080×1080): logo, quantidade grande e a assinatura num bloco só, com a imagem ou o GIF preenchendo o fundo. Não é mais um pôster alto com um vazio no meio.
+- Dá para escolher uma imagem parada ou um GIF do aparelho. Com GIF, o arquivo compartilhado e o salvo na galeria saem animados (no máximo 2 segundos, 10 quadros por segundo, 720 px, para o arquivo não estourar).
+- A quantidade na posição e no cartão mostra no máximo 1 casa, sempre para baixo: 10,19 aparece como 10,1 e nunca como 10,2. Um saldo positivo menor que 0,1 aparece como "< 0,1". O valor exato continua numa linha menor da tela.
+
 ## 8.0.0 — 26/11/2026 (versão final)
 
 **Assinatura de uso único**

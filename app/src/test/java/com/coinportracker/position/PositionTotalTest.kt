@@ -177,6 +177,17 @@ class PositionTotalTest {
         assertNull(own.footnote)
     }
 
+    @Test fun headlineTruncatesDownToOneDecimal() {
+        assertEquals("10,1", HeadlineQty.number(bd("10.19")))
+        assertEquals("10,9", HeadlineQty.number(bd("10.99")))
+        assertEquals("10", HeadlineQty.number(bd("10")))
+        assertEquals("10", HeadlineQty.number(bd("10.09")))
+        assertEquals("< 0,1", HeadlineQty.number(bd("0.09")))
+        assertEquals("10,1 SOL", HeadlineQty.text(bd("10.19"), "SOL"))
+        assertEquals(20, PositionGif.frameTimes(5_000).size)
+        assertEquals(1, PositionGif.frameTimes(10).size)
+    }
+
     @Test fun cardNameRejectsAddressesAndSettingsMigrate() {
         assertEquals("Ana", CardName.sanitize("  Ana  "))
         assertEquals("Chris 2", CardName.sanitize("Chris 2"))

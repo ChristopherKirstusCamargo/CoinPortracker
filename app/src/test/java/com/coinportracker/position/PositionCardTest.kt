@@ -21,7 +21,7 @@ class PositionCardTest {
     private val renderer by lazy { PositionCardRenderer(ctx) }
 
     private fun model(
-        amount: String = "10 SOL",
+        amount: String = "10,1",
         signature: String = "Ana",
         fiat: String? = null,
         status: String? = null,
@@ -39,13 +39,11 @@ class PositionCardTest {
         val base = renderer.render(model())
         assertEquals(PositionCardRenderer.WIDTH, base.width)
         assertEquals(PositionCardRenderer.HEIGHT, base.height)
-        assertEquals(4f / 5f, base.width.toFloat() / base.height, 0.001f)
+        assertEquals(base.width, base.height)
         val corner = base.getPixel(8, 8)
-        assertTrue(Color.red(corner) < 40 && Color.green(corner) < 40 && Color.blue(corner) < 40)
-        val center = base.getPixel(base.width / 2, base.height / 2)
-        assertTrue(Color.red(center) > Color.red(corner))
+        assertTrue(Color.red(corner) < 50 && Color.green(corner) < 50 && Color.blue(corner) < 50)
 
-        assertNotEquals(hash(base), hash(renderer.render(model(amount = "11 SOL"))))
+        assertNotEquals(hash(base), hash(renderer.render(model(amount = "11"))))
         assertNotEquals(hash(base), hash(renderer.render(model(signature = "Bruno"))))
         assertNotEquals(hash(base), hash(renderer.render(model(fiat = "R$ 1.000,00"))))
         assertEquals(hash(renderer.render(model(fiat = null))), hash(renderer.render(model(fiat = "  "))))
@@ -66,5 +64,20 @@ class PositionCardTest {
         out.parentFile?.mkdirs()
         out.outputStream().use { card.compress(Bitmap.CompressFormat.PNG, 100, it) }
         assertTrue(out.length() > 5_000)
+        val art = Bitmap.createBitmap(320, 180, Bitmap.Config.ARGB_8888)
+        val ac = android.graphics.Canvas(art)
+        ac.drawColor(android.graphics.Color.rgb(18, 42, 78))
+        val paint = android.graphics.Paint().apply { color = android.graphics.Color.rgb(210, 150, 70) }
+        ac.drawCircle(240f, 40f, 70f, paint)
+        val withArt = renderer.render(model(signature = "Christopher"), logo, art)
+        File("build/position-card-art.png").outputStream().use { withArt.compress(Bitmap.CompressFormat.PNG, 100, it) }
+        val red = Bitmap.createBitmap(24, 24, Bitmap.Config.ARGB_8888).apply { eraseColor(Color.RED) }
+        val blue = Bitmap.createBitmap(24, 24, Bitmap.Config.ARGB_8888).apply { eraseColor(Color.BLUE) }
+        val gif = File("build/position-card.gif")
+        PositionGif.write(gif, listOf(red, blue), edge = 48, delayMs = 100)
+        val bytes = gif.readBytes()
+        assertEquals("GIF89a", String(bytes, 0, 6, Charsets.US_ASCII))
+        assertTrue(bytes.count { it == 0x2C.toByte() } >= 2)
+        assertTrue(gif.length() < 500_000)
     }
 }

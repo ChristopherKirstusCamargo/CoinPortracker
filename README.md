@@ -1,6 +1,6 @@
 # CoinPortracker
 
-**Portfólio de criptomoedas privado e somente leitura, no seu Android.** Kotlin · Jetpack Compose · versão final **8.0.0**
+**Portfólio de criptomoedas privado e somente leitura, no seu Android.** Kotlin · Jetpack Compose · versão final **9.0.0**
 
 > 🇺🇸 [English](#english)
 
@@ -13,7 +13,7 @@ O CoinPortracker nasceu para acompanhar todas as carteiras de cripto num só lug
 - **Direto da fonte:** saldos, histórico e staking vêm de endpoints públicos das blockchains, pela internet, em HTTPS.
 - **Visual próprio:** preto e branco, minimalista, com verde e vermelho só para alta e queda.
 
-O desenvolvimento começou em 12/11/2026. O app passou por 1.0 (livro contábil e P&L), 2.0, 3.0 (valor real reconstruído da blockchain), 4.0 (receber, vídeo, Dev), 5.0 (animações, Rolagem de banner), 6.0.0 (Web Host, Atividade, backup completo) e 7.0.0 (saldo e cotação separados, vidro escuro). A **8.0.0** é a versão final: a Posição total soma um ativo em todas as carteiras e no stake, e gera um cartão simples para compartilhar. O APK oficial foi assinado com uma chave de uso único, destruída depois da assinatura. Não há como publicar uma atualização com a mesma identidade. Quem instalou a 7.0.0 precisa exportar o backup, desinstalar e instalar a 8.0.0 — a assinatura diferente impede atualizar por cima.
+O desenvolvimento começou em 12/11/2026. O app passou por 1.0 (livro contábil e P&L), 2.0, 3.0 (valor real reconstruído da blockchain), 4.0 (receber, vídeo, Dev), 5.0 (animações, Rolagem de banner), 6.0.0 (Web Host, Atividade, backup completo) e 7.0.0 (saldo e cotação separados, vidro escuro). A **9.0.0** é a versão final: a Posição total soma um ativo em todas as carteiras e no stake, e o cartão quadrado aceita uma imagem ou um GIF do aparelho. O APK oficial foi assinado com uma chave de uso único, destruída depois da assinatura. Não há como publicar uma atualização com a mesma identidade. Quem instalou a 8.0.0 precisa exportar o backup, desinstalar e instalar a 9.0.0 — a assinatura diferente impede atualizar por cima.
 
 ## Funcionalidades
 
@@ -23,7 +23,7 @@ O desenvolvimento começou em 12/11/2026. O app passou por 1.0 (livro contábil 
 | **Carteiras** | Cole um endereço público e o app descobre saldos e tokens em Bitcoin, Solana, Ethereum, Base, Arbitrum, Optimism, Polygon, BNB Chain, Avalanche, Litecoin, Dogecoin, Tron, XRP, Cardano, TON, Stellar, Cosmos, Near, Sui e Aptos. Carteiras manuais e de corretora também. |
 | **Lucro e prejuízo** | Realizado, não realizado e rendimentos separados; preço médio estimado pela blockchain (editável); custo médio ou FIFO; BRL e USD. |
 | **Staking** | Contas de stake de SOL lidas da blockchain, com recompensas por época em SOL e na sua moeda, e APR. |
-| **Posição total** | Em Ativos, um toque no ativo soma o saldo livre, o stake nativo e as outras carteiras. Staking líquido (mSOL, stETH…) só entra na quantidade se já houver taxa de conversão verificada; senão fica listado à parte. Cartão 4:5 para compartilhar, sem endereço, com o valor em moeda desligado por padrão. |
+| **Posição total** | Em Ativos, um toque no ativo soma o saldo livre, o stake nativo e as outras carteiras. A quantidade mostra no máximo 1 casa, truncada para baixo. Staking líquido só entra se já houver taxa verificada. O cartão quadrado aceita imagem ou GIF do aparelho; o GIF sai animado. Sem endereço, e o valor em moeda fica desligado por padrão. |
 | **Atividade** | Entradas, saídas, swaps, rendimentos e movimentos entre suas contas, com busca, filtros e o estado de leitura de cada rede. |
 | **Contábil** | Operações manuais (compra, venda, swap, transferência, staking, airdrop…), histórico de edições, importação/exportação CSV/JSON, informe de rendimentos com regras fiscais editáveis. |
 | **Alertas e metas** | Alertas de preço e patrimônio processados no aparelho; metas de valor ou quantidade. |
@@ -37,18 +37,18 @@ O desenvolvimento começou em 12/11/2026. O app passou por 1.0 (livro contábil 
 
 ## Instalar pelo APK
 
-A 8.0.0 é a versão final. O APK da release foi assinado com uma chave criada só para essa build e destruída em seguida. O certificado público (SHA-256 e SHA-1) está na [release v8.0.0](../../releases/tag/v8.0.0). Um APK com outro certificado não é o original, e ninguém pode emitir uma atualização com essa mesma assinatura.
+A 9.0.0 é a versão final. O APK da release foi assinado com uma chave criada só para essa build e destruída em seguida. O certificado público (SHA-256 e SHA-1) está na [release v9.0.0](../../releases/tag/v9.0.0). Um APK com outro certificado não é o original, e ninguém pode emitir uma atualização com essa mesma assinatura.
 
-**Quem já usa a 7.0.0 (ou a 6.0.0):** a assinatura mudou, então o Android não atualiza por cima. Faça assim:
+**Quem já usa a 8.0.0 (ou uma versão anterior):** a assinatura mudou, então o Android não atualiza por cima. Faça assim:
 
 1. Em **Ajustes › Segurança e privacidade**, exporte o **backup completo criptografado** e guarde o arquivo e a senha.
 2. Desinstale a versão que está no aparelho.
-3. Instale a 8.0.0 como abaixo.
+3. Instale a 9.0.0 como abaixo.
 4. Restaure o backup. A restauração acrescenta o que falta e não apaga o que já estiver no aparelho.
 
 **Instalação limpa** (Android **8.0** ou mais novo):
 
-1. Baixe `CoinPortracker.apk` da [release v8.0.0](../../releases/tag/v8.0.0).
+1. Baixe `CoinPortracker.apk` da [release v9.0.0](../../releases/tag/v9.0.0).
 2. **Confira a integridade.** O SHA-256 do arquivo precisa ser o publicado nessa release e em [`release/CoinPortracker.apk.sha256`](release/CoinPortracker.apk.sha256):
    - Linux: `sha256sum CoinPortracker.apk`
    - macOS: `shasum -a 256 CoinPortracker.apk`
@@ -116,7 +116,7 @@ Detalhes: [SECURITY.md](SECURITY.md) e [docs/SECURITY.md](docs/SECURITY.md).
 - O preço médio estimado é uma estimativa a partir do preço da hora de cada entrada; pode ser corrigido à mão.
 - O Web Host usa HTTP na rede local. O nome `coinportracker.local` depende de a rede permitir multicast; o IP sempre funciona.
 - O app não substitui contador: o informe de rendimentos segue regras editáveis, sem garantia fiscal.
-- A validação foi feita por testes unitários e Robolectric (450 testes no relatório, 0 falhas; os de rede ao vivo e as capturas ficam de fora da execução padrão), compilação debug e release e inspeção do APK. Não houve auditoria externa nem teste em aparelho físico neste ambiente.
+- A 9.0.0 foi conferida pela compilação de release e pelo `apksigner` (esquema v2). A suíte completa de testes não entrou como critério desta publicação. Não houve auditoria externa nem teste em aparelho físico neste ambiente.
 
 ## Compilar do código-fonte
 
@@ -132,7 +132,7 @@ echo "sdk.dir=/caminho/para/android-sdk" > local.properties
 
 Testes opcionais: `-Plive=true` (consultas reais às redes) e `-Pshots=true` (capturas de tela geradas na JVM).
 
-O APK oficial da 8.0.0 foi assinado fora do repositório, com uma chave de uso único que não foi commitada e foi destruída depois. O `signingConfig` do projeto continua lendo `keystore.properties` na raiz (`storeFile`, `storePassword`, `keyAlias`, `keyPassword`) só se o arquivo existir na máquina de quem compila. Sem ele, um release local sai com a chave de debug e **não** é o APK oficial. Keystores e senhas estão no `.gitignore` e não entram no histórico.
+O APK oficial da 9.0.0 foi assinado fora do repositório, com uma chave de uso único que não foi commitada e foi destruída depois. O `signingConfig` do projeto continua lendo `keystore.properties` na raiz (`storeFile`, `storePassword`, `keyAlias`, `keyPassword`) só se o arquivo existir na máquina de quem compila. Sem ele, um release local sai com a chave de debug e **não** é o APK oficial. Keystores e senhas estão no `.gitignore` e não entram no histórico.
 
 Os arquivos binários do projeto (fontes Inter, ícones, GIF padrão, modelos de super-resolução, listas de tokens e o `gradle-wrapper.jar`) estão no repositório; tamanhos e SHA-256 de cada um ficam em [docs/BINARY_ASSETS.md](docs/BINARY_ASSETS.md).
 
@@ -148,7 +148,7 @@ Os arquivos binários do projeto (fontes Inter, ícones, GIF padrão, modelos de
 
 ## English
 
-**CoinPortracker** is a private, **watch-only** crypto portfolio tracker for Android. It exists to follow every wallet in one place without handing keys or data to third parties, with a black-and-white minimalist design. You paste public addresses; the app reads balances, history and staking directly from public blockchain endpoints over HTTPS and keeps everything encrypted on the phone (SQLCipher + Android Keystore). No account, no ads, no telemetry, no backend. Version **8.0.0** is the final release. It adds a per-asset total (wallets, native stake, and liquid staking only when a verified conversion rate already exists) and a simple 4:5 share card. The official APK was signed with a one-time key that was destroyed after signing, so no later build can carry the same signature. Anyone on 7.0.0 must export a full backup, uninstall, install 8.0.0 and restore: Android will not upgrade across the signature change.
+**CoinPortracker** is a private, **watch-only** crypto portfolio tracker for Android. It exists to follow every wallet in one place without handing keys or data to third parties, with a black-and-white minimalist design. You paste public addresses; the app reads balances, history and staking directly from public blockchain endpoints over HTTPS and keeps everything encrypted on the phone (SQLCipher + Android Keystore). No account, no ads, no telemetry, no backend. Version **9.0.0** is the final release. It adds a per-asset total (wallets, native stake, and liquid staking only when a verified conversion rate already exists) and a square share card that can use a photo or an animated GIF from the device. Amounts on that screen and on the card show at most one decimal, truncated downward. The official APK was signed with a one-time key that was destroyed after signing, so no later build can carry the same signature. Anyone on 8.0.0 must export a full backup, uninstall, install 9.0.0 and restore: Android will not upgrade across the signature change.
 
 ### Features
 - Automatic multi-chain portfolio: Bitcoin, Solana, Ethereum, Base, Arbitrum, Optimism, Polygon, BNB Chain, Avalanche, Litecoin, Dogecoin, Tron, XRP, Cardano, TON, Stellar, Cosmos, Near, Sui and Aptos.
@@ -162,10 +162,10 @@ Os arquivos binários do projeto (fontes Inter, ícones, GIF padrão, modelos de
 - **Full encrypted backup** with non-destructive restore.
 
 ### Install
-1. On Android 8.0+, download `CoinPortracker.apk` from the [v8.0.0 release](../../releases/tag/v8.0.0).
+1. On Android 8.0+, download `CoinPortracker.apk` from the [v9.0.0 release](../../releases/tag/v9.0.0).
 2. Check the file SHA-256 against the release notes and [`release/CoinPortracker.apk.sha256`](release/CoinPortracker.apk.sha256).
 3. Check the signing certificate fingerprints (SHA-256 and SHA-1) against the same release. A different certificate is not this build.
-4. If you already have 7.0.0 or 6.0.0: export the encrypted full backup, uninstall, install 8.0.0, then restore.
+4. If you already have 8.0.0 or earlier: export the encrypted full backup, uninstall, install 9.0.0, then restore.
 5. Allow "Install unknown apps" if asked, then install.
 
 ### Web Host
@@ -182,7 +182,7 @@ The dashboard is read-only and served only to the local network. Pairing is code
 - Data comes from free public endpoints and can be partial when they rate-limit; the app reports which network failed.
 - Several chains show balances without public activity history.
 - LAN Web Host traffic is unencrypted HTTP.
-- Validation was done with 450 JVM/Robolectric tests (0 failures; live-network and screenshot tests stay skipped in the default run) and APK inspection, with no external audit and no physical-device testing in this environment.
+- The 9.0.0 release was checked with a release build and `apksigner` (v2 scheme). The full unit-test suite was not a gate for this publication. There was no external audit and no physical-device testing in this environment.
 
 ### Build
 JDK 17 + Android SDK 35, then:
@@ -192,4 +192,4 @@ JDK 17 + Android SDK 35, then:
 ./gradlew assembleRelease
 ```
 
-The official 8.0.0 APK was signed with a one-time key that was destroyed and was never committed. A local `assembleRelease` without `keystore.properties` is debug-signed and is not the official APK. Licensed under [Apache-2.0](LICENSE).
+The official 9.0.0 APK was signed with a one-time key that was destroyed and was never committed. A local `assembleRelease` without `keystore.properties` is debug-signed and is not the official APK. Licensed under [Apache-2.0](LICENSE).
